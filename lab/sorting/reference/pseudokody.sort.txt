@@ -1,0 +1,116 @@
+INSERTION-SORT(A)
+ 1  for j = 2 to length[A]
+ 2     do key = A[j]
+ 3        Wstaw A[j] w posortowany ci¹g A[1..j-1]
+ 4        i = j - 1
+ 5        while (i > 0) i (A[i] > key)
+ 6           do A[i + 1] = A[i]
+ 7              i = i - 1
+ 8        A[i + 1] = key
+ 9  return A
+ 
+SELECTION-SORT(A)
+ 1  for j = length[A] downto 2
+ 2     do max = j
+ 3        for i = j - 1 downto 1
+ 4           do if A[i] > A[max]
+ 5               then max = i
+ 6        zamieñ A[j] <-> A[max] 
+ 7  return A
+
+HEAPSORT(A)
+ 1  BUILD-HEAP(A)
+ 2  heapsize = length[A]
+ 3  for i = length[A] downto 2
+ 4     do zamieñ A[1] <-> A[i] 
+ 5        heapsize = heapsize - 1
+ 6        HEAPIFY(A, 1, heapsize)
+ 7  return A
+ BUILD-HEAP(A)
+ 1  heapsize = length[A]
+ 2  for i = length[A] / 2 downto 1
+ 3     do HEAPIFY(A, i, heapsize)
+ HEAPIFY(A, i, heapsize)
+ 1  l = 2 • i
+ 2  r = (2 • i) + 1
+ 3  if (l <= heapsize) i (A[l] > A[i])
+ 4   then largest = l
+ 5   else largest = i
+ 6  if (r <= heapsize) i (A[r] > A[largest])
+ 7   then largest = r
+ 8  if largest <> i
+ 9   then zamieñ A[i] <-> A[largest] 
+10        HEAPIFY(A, largest, heapsize)
+
+MERGE-SORT-MAIN(A)
+ 1  new B(length[A])
+ 2  MERGE-SORT(A, 1, length[A], B)
+ 3  return A
+MERGE-SORT(A, l, r, B)
+ 1  m = (l + r) / 2
+ 2  if (m - l) > 0
+ 3   then MERGE-SORT(A, l, m, B)
+ 4  if (r - m) > 1
+ 5   then MERGE-SORT(A, m + 1, r, B)
+ 6  i = l
+ 7  j = m + 1
+ 8  for k = l to r
+ 9     do if ((i <= m) i (j > r)) lub (((i <= m) i (j <= r)) i (A[i] <= A[j]))
+10         then B[k] = A[i]
+11              i = i + 1
+12         else B[k] = A[j]
+13              j = j + 1
+14  for k = l to r
+15     do A[k] = B[k]
+
+QUICKSORT-MAIN(A)
+ 1  QUICKSORT(A, 1, length[A])
+ 2  return A
+ QUICKSORT(A, p, r)
+ 1  if p < r
+ 2   then q = PARTITION(A, p, r)
+ 3        QUICKSORT(A, p, q)
+ 4        QUICKSORT(A, q + 1, r)
+ PARTITION(A, p, r)
+ 1  x = A[(p + r) / 2]
+ 2  i = p - 1
+ 3  j = r + 1
+ 4  while True
+ 5     do repeat
+ 6              j = j - 1
+ 7        until A[j] <= x
+ 8        repeat
+ 9              i = i + 1
+10        until A[i] >= x
+11        if i < j
+12         then zamieñ A[i] <-> A[j] 
+13         else return j
+
+COUNTING-SORT(A)
+ 1  k ‹ 0
+ 2  for i ‹ 1 to length[A]
+ 3     do if A[i] > k
+ 4         then k ‹ A[i]
+ 5  new C(k)
+ 6  new B(length[A])
+ 7  for i ‹ 1 to length[A]
+ 8     do C[A[i]] ‹ C[A[i]] + 1
+ 9  for j ‹ 2 to k
+10     do C[j] ‹ C[j] + C[j - 1]
+11  for i ‹ length[A] downto 1
+12     do B[C[A[i]]] ‹ A[i]
+13        C[A[i]] ‹ C[A[i]] - 1
+14  return B
+
+SHELL-SORT(A)
+ 1  t ‹ (lg length[A])
+ 2  for s ‹ t - 1 downto 0
+ 3     do h ‹ 2 ^ s
+ 4        for j ‹ h + 1 to length[A]
+ 5           do key ‹ A[j]
+ 6              i ‹ j - h
+ 7              while (i > 0) i (A[i] > key)
+ 8                 do A[i + h] ‹ A[i]
+ 9                    i ‹ i - h
+10              A[i + h] ‹ key
+11  return A
