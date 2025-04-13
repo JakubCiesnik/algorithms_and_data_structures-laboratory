@@ -1,0 +1,6 @@
+// swapping integers using XOR for optimised time and minimal memory consumption
+void swap(int *a, int *b){
+    *a = *a ^ *b;
+    *b = *a ^ *b;
+    *a = *a ^ *b;
+}

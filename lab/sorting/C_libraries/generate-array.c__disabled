@@ -1,0 +1,5 @@
+void generate_random_array(int *array, int amount, int min, int max){
+    for (int i = 0; i < amount; i++){
+        array[i] = rand() % (max - min + 1) + min;
+    }
+}
