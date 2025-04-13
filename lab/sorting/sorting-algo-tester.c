@@ -3,12 +3,12 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "C_libraries\additional-functions.c"
+#include "C_libraries/additional-functions.c"
 
 // Function prototypes for the sorting algorithm to be tested
-#include "C_algorithms\bubble-sort.c"
-#include "C_algorithms\insertion-sort.c"
-#include "C_algorithms\selection-sort.c"
+#include "C_algorithms/bubble-sort.c"
+#include "C_algorithms/insertion-sort.c"
+#include "C_algorithms/selection-sort.c"
 
 // Helper function to check if an array is sorted
 bool is_sorted(int *arr, int size) {
