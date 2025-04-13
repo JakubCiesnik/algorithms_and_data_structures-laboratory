@@ -3,16 +3,16 @@
 #include <stdlib.h>
 
 // C Libraries
-#include "C_libraries/additional-functions.c"
+#include "../C_libraries/additional-functions.c"
 
 // Sorting algos
-#include "C_algorithms/bubble-sort.c"
-#include "C_algorithms/insertion-sort.c"
-#include "C_algorithms/selection-sort.c"
+#include "../C_algorithms/bubble-sort.c"
+#include "../C_algorithms/insertion-sort.c"
+#include "../C_algorithms/selection-sort.c"
 
 // Constants
-#define REPEAT          3                       // How many times to repeat the algo (for getting more accurate average time)
-#define DATASET         "datasets/random/s2000" // Enter which dataset to test
+#define REPEAT          12                       // How many times to repeat the algo (for getting more accurate average time)
+#define DATASET         "../dataset/random/s2000" // Enter which dataset to test
 #define NUMS_AMOUNT     2000                    // Enter how many numbers there are
 
 #define NUMS_MIN_VAL    1                       // only for randomly generated test

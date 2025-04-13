@@ -3,7 +3,7 @@
 #include <time.h>
 #include <string.h>
 
-#include "C_libraries/additional-functions.c"
+#include "../C_libraries/additional-functions.c"
 
 // Functions
 void generate_dataset(const char *filename, int n, int min, int max) {
@@ -38,7 +38,7 @@ int main(){
     int offset =                4000;   // enter the offset of every dataset example: if base = 1000 and offset = 500, first dataset will have 1000 and second will have 1500 etc 
     int amount_of_datasets =    15;
     
-    char folder[] = "datasets/random";  // Choose where will the datasets be generated in
+    char folder[] = "../dataset/random";  // Choose where will the datasets be generated in
     char fname[] = "s";                 //name of the file with format "{fname}{base_amount}" for example "s2000"
 
 

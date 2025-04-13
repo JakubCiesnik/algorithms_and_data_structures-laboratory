@@ -1,0 +1,4 @@
+# Ignoring compiled C programs
+dataset-maker
+sorting-algo-tester
+sorting-algo-timer

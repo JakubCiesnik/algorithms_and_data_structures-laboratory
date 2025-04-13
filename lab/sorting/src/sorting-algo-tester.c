@@ -3,12 +3,15 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "C_libraries/additional-functions.c"
+#include "../C_libraries/additional-functions.c"
 
 // Function prototypes for the sorting algorithm to be tested
-#include "C_algorithms/bubble-sort.c"
-#include "C_algorithms/insertion-sort.c"
-#include "C_algorithms/selection-sort.c"
+#include "../C_algorithms/bubble-sort.c"
+#include "../C_algorithms/insertion-sort.c"
+#include "../C_algorithms/selection-sort.c"
+#include "../C_algorithms/heap-sort.c"
+#include "../C_algorithms/merge-sort.c"
+#include "../C_algorithms/quick-sort.c"
 
 // Helper function to check if an array is sorted
 bool is_sorted(int *arr, int size) {
@@ -27,10 +30,11 @@ void test_sorting_algorithm() {
         {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, // Already sorted
         {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, // Reverse order
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // All elements the same
-        {3, 3, 2, 2, 1, 1, 0, 0, -1, -1} // Mixed with duplicates
+        {3, 3, 2, 2, 1, 1, 0, 0, -1, -1}, // Mixed with duplicates
+        {5, 2, 9, 1, 5, 6, 0, 8, 7}, // Random order but 9 elements
     };
 
-    int sizes[] = {10, 10, 10, 10, 10};
+    int sizes[] = {10, 10, 10, 10, 10, 9};
     int num_tests = sizeof(sizes) / sizeof(sizes[0]);
 
     for (int i = 0; i < num_tests; i++) {
@@ -42,7 +46,10 @@ void test_sorting_algorithm() {
         
         // bubble_sort(arr, sizes[i]);
         // insertion_sort(arr, sizes[i]);
-        selection_sort(arr, sizes[i]);
+        // selection_sort(arr, sizes[i]);
+        // heap_sort(arr, sizes[i]);
+        // merge_sort(arr, sizes[i]);
+        quick_sort(arr, sizes[i]);
 
 
         if (is_sorted(arr, sizes[i])) {

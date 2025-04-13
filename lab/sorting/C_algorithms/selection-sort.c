@@ -8,4 +8,3 @@ void selection_sort(int *nums, int size){
         }
     }
 }
-
