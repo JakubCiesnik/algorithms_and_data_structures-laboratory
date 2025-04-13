@@ -24,7 +24,7 @@ int return_smallest_arg(int *nums, int start, int end){
 
 // Prints the array
 void print_array(int nums[], int size){
-    printf("Sorted nums: {");
+    printf("Nums: {");
     for (int i = 0; i < size;i++){
         printf("%i, ", nums[i]);
     }
