@@ -1,103 +1,171 @@
-// use rand::prelude::*;
-// // use rand::rng;
-// use rand_chacha::ChaCha8Rng;
-// use std::cmp::Reverse;
-// use std::fs::create_dir_all;
-// use std::fs::File;
-// use std::io;
+use rand::prelude::*;
+// use rand::rng;
+use rand_chacha::ChaCha8Rng;
+use std::cmp::Reverse;
+use std::fs::create_dir_all;
+use std::fs::File;
+use std::io;
+use std::io::prelude::*;
+use std::io::BufWriter;
+use std::path::PathBuf;
 // use std::io::prelude::*;
-// use std::io::BufWriter;
-// use std::io::Lines;
-// use std::path::Path;
-// use std::path::PathBuf;
-// // use std::io::prelude::*;
-//
-// // fn writetofile() -> io::Result<()> {
-// //     Ok(())
-// // }
-// //
-// // fn parseinputdata() -> io::Result<()> {
-// //     Ok(())
-// // }
-// //
-// // fn generatedata() {}
-//
-// fn main() -> io::Result<()> {
-//     // let mut f = File::create("datasets/test/foo.txt")?;
-//     const PATH: Path = Path::new(r"../dataset/random/1");
-//     let v = Vec<u32> = Vec::new();
-//     file!Lines
-//
-//
+
+// fn writetofile() -> io::Result<()> {
 //     Ok(())
 // }
+//
+// fn parseinputdata() -> io::Result<()> {
+//     Ok(())
+// }
+//
+// fn generatedata() {}
 
-use std::fs::File;
-use std::io::{self, BufRead};
-use std::path::Path;
-use std::time::Instant;
+fn main() -> io::Result<()> {
+    // let mut f = File::create("datasets/test/foo.txt")?;
+    const DATA_PATH: &str = r"./dataset";
+    const SCALAR: u16 = 4000;
+    const ELEMENT_COUNT: u8 = 15;
+    const SEED: u64 = 346780;
 
-/// Reads integers from a file, one per line.
-fn read_numbers_from_file(filename: &str) -> io::Result<Vec<i32>> {
-    let path = Path::new(filename);
-    let file = File::open(path)?;
-    let buffered = io::BufReader::new(file);
+    let mut rand_nums = [SEED as u32; ELEMENT_COUNT as usize * SCALAR as usize];
+    let mut rng = ChaCha8Rng::seed_from_u64(SEED);
 
-    let mut numbers = Vec::new();
-    for line in buffered.lines() {
-        let line = line?;
-        if let Ok(num) = line.trim().parse::<i32>() {
-            numbers.push(num);
+    for i in 1..=ELEMENT_COUNT {
+        let mut filepath = PathBuf::from(DATA_PATH); // possibly have to fix due to borrow checker
+        let arr_len = SCALAR as usize * i as usize;
+        let slice = &mut rand_nums[0..arr_len];
+        let mut set = "constant";
+        let _ = create_dir_all(format!("{DATA_PATH}/{set}"));
+        filepath.push(set);
+        {
+            filepath = filepath.clone();
+            filepath.push(format!("{i}"));
+            let display = filepath.display();
+            let mut file = match File::create(filepath.as_path()) {
+                Err(why) => panic!("couldn't create {}: {}", display, why),
+                Ok(file) => file,
+            };
+            slice
+                .iter()
+                .try_for_each(|&num| writeln!(file, "{}", num))?;
+            filepath.pop();
         }
+        filepath.pop();
+        // slice.iter_mut().for_each(|x| *x = rng.random());
+        // let mut set = "random";
+        // let _ = create_dir_all(format!("{DATA_PATH}/{set}"));
+        // filepath.push(set);
+        // {
+        //     filepath = filepath.clone();
+        //     filepath.push(format!("{i}"));
+        //     let display = filepath.display();
+        //     let mut file = match File::create(filepath.as_path()) {
+        //         Err(why) => panic!("couldn't create {}: {}", display, why),
+        //         Ok(file) => file,
+        //     };
+        //     slice
+        //         .iter()
+        //         .try_for_each(|&num| writeln!(file, "{}", num))?;
+        //     filepath.pop();
+        // }
+        // filepath.pop();
+        // set = "A_shaped";
+        // let _ = create_dir_all(format!("{DATA_PATH}/{set}"));
+        // filepath.push(set);
+        // {
+        //     // A shaped
+        //     filepath = filepath.clone();
+        //     filepath.push(format!("{i}"));
+        //     let display = filepath.display();
+        //     let mut file = match File::create(filepath.as_path()) {
+        //         Err(why) => panic!("couldn't create {}: {}", display, why),
+        //         Ok(file) => file,
+        //     };
+        //     slice[..arr_len / 2].sort_unstable();
+        //     slice[arr_len / 2..].sort_unstable_by_key(|w| Reverse(*w));
+        //     slice
+        //         .iter()
+        //         .try_for_each(|&num| writeln!(file, "{}", num))?;
+        //     filepath.pop();
+        // } // V shaped
+        // filepath.pop();
+        // set = "V_shaped";
+        // let _ = create_dir_all(format!("{DATA_PATH}/{set}"));
+        // filepath.push(set);
+        // {
+        //     filepath = filepath.clone();
+        //     filepath.push(format!("{i}"));
+        //     let display = filepath.display();
+        //     let mut file = match File::create(filepath.as_path()) {
+        //         Err(why) => panic!("couldn't create {}: {}", display, why),
+        //         Ok(file) => file,
+        //     };
+        //     slice[..arr_len / 2].sort_unstable_by_key(|w| Reverse(*w));
+        //     slice[arr_len / 2..].sort_unstable();
+        //     slice
+        //         .iter()
+        //         .try_for_each(|&num| writeln!(file, "{}", num))?;
+        //     filepath.pop();
+        // }
+        // filepath.pop();
+        // set = "ascending";
+        // let _ = create_dir_all(format!("{DATA_PATH}/{set}"));
+        // filepath.push(set);
+        // {
+        //     filepath = filepath.clone();
+        //     filepath.push(format!("{i}"));
+        //     let display = filepath.display();
+        //     let mut file = match File::create(filepath.as_path()) {
+        //         Err(why) => panic!("couldn't create {}: {}", display, why),
+        //         Ok(file) => file,
+        //     };
+        //     slice.sort();
+        //     slice
+        //         .iter()
+        //         .try_for_each(|&num| writeln!(file, "{}", num))?;
+        //     filepath.pop();
+        // }
+        // filepath.pop();
+        // set = "descending";
+        // let _ = create_dir_all(format!("{DATA_PATH}/{set}"));
+        // filepath.push(set);
+        // {
+        //     filepath = filepath.clone();
+        //     filepath.push(format!("{i}"));
+        //     let display = filepath.display();
+        //     let mut file = match File::create(filepath.as_path()) {
+        //         Err(why) => panic!("couldn't create {}: {}", display, why),
+        //         Ok(file) => file,
+        //     };
+        //     slice.sort_by_key(|w| Reverse(*w));
+        //     slice
+        //         .iter()
+        //         .try_for_each(|&num| writeln!(file, "{}", num))?;
+        //     filepath.pop();
+        // }
+        // filepath.pop();
+        // slice_a.sort_unstable_by_key(|w| Reverse(*w));
+        // slice_b.sort_unstable_by_key(|w| Reverse(*w));
+        // match file.write_all(slice) {
+        //     Err(why) => panic!("couldn't write to {}: {}", display, why),
+        //     Ok(_) => println!("successfully wrote to {}", display),
+        // }
     }
-    Ok(numbers)
+
+    // f.write_all(b"{secret_number}")?;
+    // needs to be b"" to convert the string slice (&str) to byte
+    // slice, which isn't required to be valid UTF8. this string
+    // type is used in OS operations
+    Ok(())
 }
 
-/// In-place quicksort implementation.
-fn quicksort(arr: &mut [i32]) {
-    if arr.len() <= 1 {
-        return;
-    }
-    let pivot_index = partition(arr);
-    let (left, right) = arr.split_at_mut(pivot_index);
-    quicksort(left);
-    quicksort(&mut right[1..]);
-}
-
-/// Partition helper function.
-fn partition(arr: &mut [i32]) -> usize {
-    let len = arr.len();
-    let pivot_index = len - 1;
-    let pivot = arr[pivot_index];
-    let mut i = 0;
-
-    for j in 0..pivot_index {
-        if arr[j] <= pivot {
-            arr.swap(i, j);
-            i += 1;
-        }
-    }
-    arr.swap(i, pivot_index);
-    i
-}
-
-fn main() {
-    let filename = "data.txt";
-    println!("Reading data from: {}", filename);
-
-    match read_numbers_from_file(filename) {
-        Ok(mut data) => {
-            println!("Read {} numbers.", data.len());
-
-            let start = Instant::now();
-            quicksort(&mut data);
-            let duration = start.elapsed();
-
-            println!("Sorted data: {:?}", data);
-            println!("Sorting took: {:?}", duration);
-        }
-        Err(e) => {
-            eprintln!("Error reading file: {}", e);
-        }
-    }
-}
+// fn main() -> io::Result<()> {
+//     let mut f = File::open("foo.txt")?;
+//     let mut buffer = [0; 10];
+//
+//     // read up to 10 bytes
+//     let n = f.read(&mut buffer)?;
+//
+//     println!("The bytes: {:?}", &buffer[..n]);
+//     Ok(())
+// }
