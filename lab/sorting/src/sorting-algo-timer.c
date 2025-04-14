@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+#include <stdint.h> // for unsigned ints
 
 // C Libraries
 #include "../C_libraries/additional-functions.c"
@@ -14,14 +15,14 @@
 #include "../C_algorithms/quick-sort.c"
 
 // Constants
-#define REPEAT              100                                  // How many times to repeat the algo (for getting more accurate average time, default 10 times)
-#define DATASET_MULTIPLIER  14                                // Multiplier for easier dataset swapping
+#define REPEAT              10                                     // How many times to repeat the algo (for getting more accurate average time, default 10 times)
+#define DATASET_MULTIPLIER  15                                      // Multiplier for easier dataset swapping
 
-#define NUMS_AMOUNT         (2000 + 4000 * DATASET_MULTIPLIER)  // Enter how many numbers there are (which dataset to use)
-#define BASE_PATH           "../dataset/random/s"               // Enter which dataset to test
+#define NUMS_AMOUNT         (4000 * DATASET_MULTIPLIER)      // Enter how many numbers there are (which dataset to use)
+#define BASE_PATH           "../dataset/descending/"                    // Enter which dataset to test
 
-#define NUMS_MIN_VAL        1                                   // only for randomly generated test
-#define NUMS_MAX_VAL        10000                               // only for randomly generated test
+#define NUMS_MIN_VAL        1                                       // only for randomly generated test
+#define NUMS_MAX_VAL        10000                                   // only for randomly generated test
 
 // Main
 int main(){
@@ -34,7 +35,11 @@ int main(){
 
     // Test using an imported dataset
     char dataset_path[100];
-    sprintf(dataset_path, "%s%d", BASE_PATH, NUMS_AMOUNT);
+
+    // edit this for differently named datasets
+    // sprintf(dataset_path, "%s%d", BASE_PATH, NUMS_AMOUNT);                  // for "s2000" type datasets
+    sprintf(dataset_path, "%s%d", BASE_PATH, DATASET_MULTIPLIER);       // for "1" type datasets
+
     printf("Using: %s\n",dataset_path);
     FILE *file = fopen(dataset_path, "r");
     if (file == NULL) {
@@ -42,17 +47,17 @@ int main(){
         return 1;
     }
 
-    int nums[NUMS_AMOUNT];
+    uint32_t nums[NUMS_AMOUNT];
     int count = 0;
     
-    while (fscanf(file, "%d", &nums[count]) == 1) {
+    while (fscanf(file, "%u", &nums[count]) == 1) { // switched to unsigned ints
         count++;
     }
     int nums_size = count;
     fclose(file);
     
     // Preparing nums backup
-    int nums_original[NUMS_AMOUNT];
+    uint32_t nums_original[NUMS_AMOUNT];
     for (int i = 0; i < NUMS_AMOUNT; i++) {
         nums_original[i] = nums[i];
     }
@@ -68,11 +73,11 @@ int main(){
         // Choose sorting algo to test
 
         // bubble_sort(nums, nums_size);
-        // insertion_sort(nums, nums_size);
-        // selection_sort(nums, nums_size);
-        // heap_sort(nums, nums_size);
-        // merge_sort(nums, nums_size);
-        quick_sort(nums, nums_size);      
+        insertion_sort(nums, nums_size);        // 1
+        // selection_sort(nums, nums_size);     // 2
+        // heap_sort(nums, nums_size);          // 3
+        // merge_sort(nums, nums_size);         // 4
+        // quick_sort(nums, nums_size);      
     }
     clock_t duration = (clock() - begin);
 
@@ -95,7 +100,7 @@ int main(){
 
     // Print the first 100 numbers for verification
     for (int i = 0; i < 100; i++) {
-        printf("%i ", nums[i]);
+        printf("%u ", nums[i]);
     }
     printf("\n");
     
