@@ -26,7 +26,7 @@ bool is_sorted(int *arr, int size) {
 // Test function
 void test_sorting_algorithm() {
     int test_cases[][10] = {
-        {5, 2, 9, 1, 5, 6, 0, 3, 8, 7}, // Random order
+        {5, 2, 1755, 1, 5, 6855, 0, 3, 8, 7}, // Random order
         {1, 2, 3, 4, 5, 6, 7, 8, 9, 10}, // Already sorted
         {10, 9, 8, 7, 6, 5, 4, 3, 2, 1}, // Reverse order
         {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // All elements the same
@@ -44,12 +44,12 @@ void test_sorting_algorithm() {
         // Sorting algos (uncomment to test a given algorithm)
 
         
-        // bubble_sort(arr, sizes[i]);
+        bubble_sort(arr, sizes[i]);
         // insertion_sort(arr, sizes[i]);
         // selection_sort(arr, sizes[i]);
         // heap_sort(arr, sizes[i]);
         // merge_sort(arr, sizes[i]);
-        quick_sort(arr, sizes[i]);
+        // quick_sort(arr, sizes[i]);
 
 
         if (is_sorted(arr, sizes[i])) {
