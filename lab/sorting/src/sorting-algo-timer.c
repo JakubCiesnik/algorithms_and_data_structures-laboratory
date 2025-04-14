@@ -14,8 +14,8 @@
 #include "../C_algorithms/quick-sort.c"
 
 // Constants
-#define REPEAT              10                                  // How many times to repeat the algo (for getting more accurate average time)
-#define DATASET_MULTIPLIER  0                                   // Configurable multiplier for dataset size
+#define REPEAT              100                                  // How many times to repeat the algo (for getting more accurate average time, default 10 times)
+#define DATASET_MULTIPLIER  14                                // Multiplier for easier dataset swapping
 
 #define NUMS_AMOUNT         (2000 + 4000 * DATASET_MULTIPLIER)  // Enter how many numbers there are (which dataset to use)
 #define BASE_PATH           "../dataset/random/s"               // Enter which dataset to test
@@ -67,12 +67,12 @@ int main(){
 
         // Choose sorting algo to test
 
-        bubble_sort(nums, nums_size);
+        // bubble_sort(nums, nums_size);
         // insertion_sort(nums, nums_size);
         // selection_sort(nums, nums_size);
         // heap_sort(nums, nums_size);
         // merge_sort(nums, nums_size);
-        // quick_sort(nums, nums_size);      
+        quick_sort(nums, nums_size);      
     }
     clock_t duration = (clock() - begin);
 
