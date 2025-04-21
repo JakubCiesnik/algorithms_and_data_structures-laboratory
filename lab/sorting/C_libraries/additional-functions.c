@@ -5,10 +5,16 @@ void generate_random_array(int *array, int amount, int min, int max){
 }
 
 // swapping integers using XOR for optimized time and minimal memory consumption
-void swap(int *a, int *b){
-    *a = *a ^ *b;
-    *b = *a ^ *b;
-    *a = *a ^ *b;
+// void swap(int *a, int *b){
+//     *a = *a ^ *b;
+//     *b = *a ^ *b;
+//     *a = *a ^ *b;
+// }
+// ALTERNATIVE SWAP FUNCTION - noticed quicksort didnt like the XOR one
+void swap(int64_t *a, int64_t *b){
+    int64_t temp = *a;
+    *a = *b;
+    *b = temp;
 }
 
 int return_smallest_arg(int *nums, int start, int end){

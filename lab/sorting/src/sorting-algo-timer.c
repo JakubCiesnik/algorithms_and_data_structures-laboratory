@@ -7,19 +7,21 @@
 #include "../C_libraries/additional-functions.c"
 
 // Sorting algos
-#include "../C_algorithms/bubble-sort.c"
-#include "../C_algorithms/insertion-sort.c"
-#include "../C_algorithms/selection-sort.c"
-#include "../C_algorithms/heap-sort.c"
-#include "../C_algorithms/merge-sort.c"
-#include "../C_algorithms/quick-sort.c"
+// #include "../C_algorithms/bubble-sort.c"
+// #include "../C_algorithms/insertion-sort.c"
+// #include "../C_algorithms/selection-sort.c"
+// #include "../C_algorithms/heap-sort.c"
+// #include "../C_algorithms/merge-sort.c"
+#include "../C_algorithms/quick-sort-middle.c"
+#include "../C_algorithms/quick-sort-right.c"
+#include "../C_algorithms/quick-sort-random.c"
 
 // Constants
-#define REPEAT              10                                     // How many times to repeat the algo (for getting more accurate average time, default 10 times)
-#define DATASET_MULTIPLIER  15                                      // Multiplier for easier dataset swapping
+#define REPEAT              1000                                     // How many times to repeat the algo (for getting more accurate average time, default 10 times)
+#define DATASET_MULTIPLIER  6                                     // Multiplier for easier dataset swapping
 
 #define NUMS_AMOUNT         (4000 * DATASET_MULTIPLIER)      // Enter how many numbers there are (which dataset to use)
-#define BASE_PATH           "../dataset/descending/"                    // Enter which dataset to test
+#define BASE_PATH           "../dataset/A_shaped/"                    // Enter which dataset to test
 
 #define NUMS_MIN_VAL        1                                       // only for randomly generated test
 #define NUMS_MAX_VAL        10000                                   // only for randomly generated test
@@ -29,7 +31,7 @@ int main(){
     
     // Test using randomly generate nums
     // srand(clock());         // Random gen seed - using clock() instead of time(NULL) for more optimal random nums
-    // int nums[NUMS_AMOUNT];
+    // uint64_t nums[NUMS_AMOUNT];
     // generate_random_array(nums, NUMS_AMOUNT, NUMS_MIN_VAL, NUMS_MAX_VAL);
     // int nums_size = sizeof(nums) / sizeof(nums[0]);
 
@@ -47,17 +49,17 @@ int main(){
         return 1;
     }
 
-    uint32_t nums[NUMS_AMOUNT];
+    uint64_t nums[NUMS_AMOUNT];
     int count = 0;
     
-    while (fscanf(file, "%u", &nums[count]) == 1) { // switched to unsigned ints
+    while (fscanf(file, "%lu", &nums[count]) == 1) { // switched to unsigned 64-bit ints
         count++;
     }
     int nums_size = count;
     fclose(file);
     
     // Preparing nums backup
-    uint32_t nums_original[NUMS_AMOUNT];
+    uint64_t nums_original[NUMS_AMOUNT];
     for (int i = 0; i < NUMS_AMOUNT; i++) {
         nums_original[i] = nums[i];
     }
@@ -73,11 +75,14 @@ int main(){
         // Choose sorting algo to test
 
         // bubble_sort(nums, nums_size);
-        insertion_sort(nums, nums_size);        // 1
+        // insertion_sort(nums, nums_size);     // 1
         // selection_sort(nums, nums_size);     // 2
         // heap_sort(nums, nums_size);          // 3
         // merge_sort(nums, nums_size);         // 4
-        // quick_sort(nums, nums_size);      
+        // quick_sort(nums, nums_size); 
+        quick_sort_middle(nums, nums_size);
+        // quick_sort_right(nums, nums_size);
+        // quick_sort_random(nums, nums_size);
     }
     clock_t duration = (clock() - begin);
 
@@ -100,9 +105,9 @@ int main(){
 
     // Print the first 100 numbers for verification
     for (int i = 0; i < 100; i++) {
-        printf("%u ", nums[i]);
+        printf("%lu ", nums[i]);
     }
     printf("\n");
-    
+
     return 0;
 }

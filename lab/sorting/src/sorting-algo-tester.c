@@ -11,7 +11,9 @@
 #include "../C_algorithms/selection-sort.c"
 #include "../C_algorithms/heap-sort.c"
 #include "../C_algorithms/merge-sort.c"
-#include "../C_algorithms/quick-sort.c"
+#include "../C_algorithms/quick-sort-middle.c"
+#include "../C_algorithms/quick-sort-right.c"
+#include "../C_algorithms/quick-sort-random.c"
 
 // Helper function to check if an array is sorted
 bool is_sorted(int *arr, int size) {
@@ -43,14 +45,14 @@ void test_sorting_algorithm() {
 
         // Sorting algos (uncomment to test a given algorithm)
 
-        
-        bubble_sort(arr, sizes[i]);
+        // bubble_sort(arr, sizes[i]);
         // insertion_sort(arr, sizes[i]);
         // selection_sort(arr, sizes[i]);
         // heap_sort(arr, sizes[i]);
         // merge_sort(arr, sizes[i]);
-        // quick_sort(arr, sizes[i]);
-
+        // quick_sort_middle(arr, sizes[i]);
+        // quick_sort_right(arr, sizes[i]);     
+        quick_sort_random(arr, sizes[i]);
 
         if (is_sorted(arr, sizes[i])) {
             printf("Test case %d passed.\n", i + 1);
