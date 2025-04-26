@@ -1,14 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <stdint.h>
 
 #include "../C_libraries/additional-functions.c"
 
-// Generate an unsorted array of non duplicated natural numbers
+// Generates an unsorted array of non duplicated natural numbers
 int main(){
 
     // Set amount of nums generated and the range of them starting from 1
-    int amount =        100;                     
+    int amount =        4000;                     
     int start_index =   0;
     int end_index =     start_index + amount - 1;
     
@@ -20,6 +21,7 @@ int main(){
     
     // Prefix of filename with format "{fprefix}{amount}" for example "s2000"
     char fprefix[] = "n";
+
 
 
     // Main runtime
