@@ -1,7 +1,9 @@
+#include <stdlib.h> 
+
 // Currently have no idea what this does, just copy pasted from pseudo-code.txt
 
 struct tree {
-	int info;
+  int info;
 	struct tree *left;
 	struct tree *right;
 };
@@ -15,11 +17,11 @@ struct tree *insert(struct tree *root, int x) {
 		root->right = NULL;
 		return(root);
 	}
-	if(root->info > x)
-	     root->left = insert(root->left,x); else {
-		if(root->info < x)
+  if(root->info > x)
+	     root->left = insert(root->left,x);
+  else if(root->info < x)
 			root->right = insert(root->right,x);
-	}
+	
 	return(root);
 }
 // ------------------------------- może się przydac do szukania ale trzeba przerobić
