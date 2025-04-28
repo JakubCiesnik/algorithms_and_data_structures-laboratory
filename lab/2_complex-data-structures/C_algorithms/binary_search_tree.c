@@ -44,6 +44,13 @@ int bst_find(struct bst_node *root, int value) {
     return 0; // Not found
 }
 
+void bst_inorder_print(struct bst_node *node) {
+    if (node == NULL) return;
+    bst_inorder_print(node->left);
+    printf("%d ", node->info);
+    bst_inorder_print(node->right);
+}
+
 void bst_free(struct bst_node *root) {
     if (root == NULL) return;
     bst_free(root->left);

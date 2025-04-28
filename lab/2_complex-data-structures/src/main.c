@@ -4,6 +4,7 @@
 #include <time.h>
 #include "../C_algorithms/sorted_linked_list.c"
 #include "../C_algorithms/binary_search_tree.c"
+#include "../C_algorithms/AVL_tree.c"
 
 #define FILE_NAME "../dataset/n4000"
 #define NUMBERS_COUNT 4000
@@ -86,8 +87,33 @@ int main() {
 
     printf("BST Insertion Time: %f seconds\n", insertion_time_bst);
     printf("BST Search Time: %f seconds\n", search_time_bst);
+    
+    struct avl_node *avl = NULL;
 
-    bst_free(bst);
+    // === AVL Tree Benchmark ===
+    printf("\nBenchmarking AVL Tree...\n");
+
+    start = clock();
+    for (int j = 0; j < NUMBERS_COUNT; j++) {
+        avl = avl_insert(avl, numbers[j]);
+    }
+    end = clock();
+    double insertion_time_avl = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    start = clock();
+    for (int j = 0; j < NUMBERS_COUNT; j++) {
+        if (!avl_find(avl, numbers[j])) {
+            fprintf(stderr, "AVL Error: Value %u not found!\n", numbers[j]);
+        }
+    }
+    end = clock();
+    double search_time_avl = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    printf("AVL Insertion Time: %f seconds\n", insertion_time_avl);
+    printf("AVL Search Time: %f seconds\n", search_time_avl);
+
+    avl_free(avl);   bst_free(bst);
 
     return 0;
 }
+
