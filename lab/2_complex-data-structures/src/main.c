@@ -94,6 +94,23 @@ int main() {
     end = clock();
     search_time_bst = ((double)(end - start)) / CLOCKS_PER_SEC;
 
+    printf("BST In-Order before balancing:\n");
+    bst_inorder_print(bst);
+    printf("\n");
+
+    int height_before = bst_get_height(bst);
+    printf("Height before balancing: %d\n", height_before);
+
+    // Balance the BST
+    bst = bst_balance(bst);
+
+    printf("\nBST In-Order after balancing:\n");
+    bst_inorder_print(bst);
+    printf("\n");
+
+    int height_after = bst_get_height(bst);
+    printf("Height after balancing: %d\n", height_after);
+
     start = clock();
     bst_free(bst);
     end = clock();
@@ -139,6 +156,8 @@ int main() {
     printf("%f\n", insertion_time_avl);
     printf("%f\n", search_time_avl);
     printf("%f\n", deletion_time_avl);
+    
+
 
     return 0;
 }
