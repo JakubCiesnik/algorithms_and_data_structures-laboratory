@@ -9,7 +9,8 @@
 int main(){
 
     // Set amount of nums generated and the range of them starting from 1
-    int amount =        4000;                     
+    int multiplayer =   15;
+    int amount =        4000 * multiplayer;                     
     int start_index =   0;
     int end_index =     start_index + amount - 1;
     

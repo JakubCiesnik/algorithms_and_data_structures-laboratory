@@ -6,8 +6,8 @@
 #include "../C_algorithms/binary_search_tree.c"
 #include "../C_algorithms/AVL_tree.c"
 
-#define FILE_NAME "../dataset/n4000"
-#define NUMBERS_COUNT 4000
+#define FILE_NAME "../dataset/n44000"
+#define NUMBERS_COUNT 44000
 
 int main() {
     struct list_node *list = NULL;
@@ -15,8 +15,9 @@ int main() {
     uint32_t numbers[NUMBERS_COUNT];
     FILE *file;
     clock_t start, end;
-    double insertion_time_list, search_time_list;
-    double insertion_time_bst, search_time_bst;
+    double insertion_time_list, search_time_list, deletion_time_list;
+    double insertion_time_bst, search_time_bst, deletion_time_bst;
+    double insertion_time_avl, search_time_avl, deletion_time_avl;
     int i = 0;
 
     // Open the file
@@ -61,10 +62,18 @@ int main() {
     end = clock();
     search_time_list = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-    printf("List Insertion Time: %f seconds\n", insertion_time_list);
-    printf("List Search Time: %f seconds\n\n", search_time_list);
-
+    start = clock();
     free_list(list);
+    end = clock();
+    deletion_time_list = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    // printf("List Insertion Time: %f seconds\n", insertion_time_list);
+    // printf("List Search Time: %f seconds\n\n", search_time_list);
+    // printf("List Deletion Time: %f seconds\n\n", deletion_time_list);
+    printf("%f\n", insertion_time_list);
+    printf("%f\n", search_time_list);
+    printf("%f\n", deletion_time_list);
+
 
     // === Binary Search Tree Benchmark ===
     printf("Benchmarking Binary Search Tree...\n");
@@ -85,20 +94,29 @@ int main() {
     end = clock();
     search_time_bst = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-    printf("BST Insertion Time: %f seconds\n", insertion_time_bst);
-    printf("BST Search Time: %f seconds\n", search_time_bst);
+    start = clock();
+    bst_free(bst);
+    end = clock();
+    deletion_time_bst = ((double)(end - start)) / CLOCKS_PER_SEC;
+
+    // printf("BST Insertion Time: %f seconds\n", insertion_time_bst);
+    // printf("BST Search Time: %f seconds\n", search_time_bst);
+    // printf("BST Deletion Time: %f seconds\n", deletion_time_bst);
+    printf("%f\n", insertion_time_bst);
+    printf("%f\n", search_time_bst);
+    printf("%f\n", deletion_time_bst);
     
     struct avl_node *avl = NULL;
 
     // === AVL Tree Benchmark ===
-    printf("\nBenchmarking AVL Tree...\n");
+    printf("Benchmarking AVL Tree...\n");
 
     start = clock();
     for (int j = 0; j < NUMBERS_COUNT; j++) {
         avl = avl_insert(avl, numbers[j]);
     }
     end = clock();
-    double insertion_time_avl = ((double)(end - start)) / CLOCKS_PER_SEC;
+    insertion_time_avl = ((double)(end - start)) / CLOCKS_PER_SEC;
 
     start = clock();
     for (int j = 0; j < NUMBERS_COUNT; j++) {
@@ -107,12 +125,20 @@ int main() {
         }
     }
     end = clock();
-    double search_time_avl = ((double)(end - start)) / CLOCKS_PER_SEC;
+    search_time_avl = ((double)(end - start)) / CLOCKS_PER_SEC;
+    
+    
+    start = clock();
+    avl_free(avl);
+    end = clock();
+    deletion_time_avl = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-    printf("AVL Insertion Time: %f seconds\n", insertion_time_avl);
-    printf("AVL Search Time: %f seconds\n", search_time_avl);
-
-    avl_free(avl);   bst_free(bst);
+    // printf("AVL Insertion Time: %f seconds\n", insertion_time_avl);
+    // printf("AVL Search Time: %f seconds\n", search_time_avl);
+    // printf("AVL Deletion Time: %f seconds\n", deletion_time_avl);
+    printf("%f\n", insertion_time_avl);
+    printf("%f\n", search_time_avl);
+    printf("%f\n", deletion_time_avl);
 
     return 0;
 }

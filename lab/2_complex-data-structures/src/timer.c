@@ -6,9 +6,9 @@
 // C Libraries
 #include "../C_libraries/additional-functions.c"
 
-// Build list and tree scripts
-#include "../C_algorithms/sorted-list-builder.c"
-#include "../C_algorithms/sorted-tree-builder.c"
+// // Build list and tree scripts
+// #include "../C_algorithms/sorted-list-builder.c"
+// #include "../C_algorithms/sorted-tree-builder.c"
 
 // Constants
 #define REPEAT              1                                     // How many times to repeat the algo (for getting more accurate average time, default 10 times)

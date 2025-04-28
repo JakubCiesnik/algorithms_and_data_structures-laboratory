@@ -1,2 +1,4 @@
 # Ignoring compiled C programs
 dataset-maker
+main
+timer
