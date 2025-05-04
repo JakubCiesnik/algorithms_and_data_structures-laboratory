@@ -6,8 +6,8 @@
 #include "../C_algorithms/binary_search_tree.c"
 #include "../C_algorithms/AVL_tree.c"
 
-#define FILE_NAME "../dataset/n44000"
-#define NUMBERS_COUNT 44000
+#define FILE_NAME "../dataset/n60000"
+#define NUMBERS_COUNT 60000
 
 int main() {
     struct list_node *list = NULL;
@@ -43,29 +43,29 @@ int main() {
     set_debug(0); // No printing
 
     // === Linked List Benchmark ===
-    printf("Benchmarking Linked List...\n");
+    // printf("Benchmarking Linked List...\n");
 
-    start = clock();
-    for (int j = 0; j < NUMBERS_COUNT; j++) {
-        insert_sorted(&list, numbers[j]);
-    }
-    end = clock();
-    insertion_time_list = ((double)(end - start)) / CLOCKS_PER_SEC;
+    // start = clock();
+    // for (int j = 0; j < NUMBERS_COUNT; j++) {
+    //     insert_sorted(&list, numbers[j]);
+    // }
+    // end = clock();
+    // insertion_time_list = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-    start = clock();
-    for (int j = 0; j < NUMBERS_COUNT; j++) {
-        int pos = find_position(list, numbers[j]);
-        if (pos == -1) {
-            fprintf(stderr, "List Error: Value %u not found!\n", numbers[j]);
-        }
-    }
-    end = clock();
-    search_time_list = ((double)(end - start)) / CLOCKS_PER_SEC;
+    // start = clock();
+    // for (int j = 0; j < NUMBERS_COUNT; j++) {
+    //     int pos = find_position(list, numbers[j]);
+    //     if (pos == -1) {
+    //         fprintf(stderr, "List Error: Value %u not found!\n", numbers[j]);
+    //     }
+    // }
+    // end = clock();
+    // search_time_list = ((double)(end - start)) / CLOCKS_PER_SEC;
 
-    start = clock();
-    free_list(list);
-    end = clock();
-    deletion_time_list = ((double)(end - start)) / CLOCKS_PER_SEC;
+    // start = clock();
+    // free_list(list);
+    // end = clock();
+    // deletion_time_list = ((double)(end - start)) / CLOCKS_PER_SEC;
 
     // printf("List Insertion Time: %f seconds\n", insertion_time_list);
     // printf("List Search Time: %f seconds\n\n", search_time_list);
@@ -95,7 +95,7 @@ int main() {
     search_time_bst = ((double)(end - start)) / CLOCKS_PER_SEC;
 
     printf("BST In-Order before balancing:\n");
-    bst_inorder_print(bst);
+    // bst_inorder_print(bst);
     printf("\n");
 
     int height_before = bst_get_height(bst);
@@ -105,7 +105,7 @@ int main() {
     bst = bst_balance(bst);
 
     printf("\nBST In-Order after balancing:\n");
-    bst_inorder_print(bst);
+    // bst_inorder_print(bst);
     printf("\n");
 
     int height_after = bst_get_height(bst);
