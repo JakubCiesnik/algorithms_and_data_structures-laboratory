@@ -1,0 +1,35 @@
+
+Algorytm sortowania topologicznego wierzchołków
+
+1  krok := 1;
+2  
+3  TS(v)
+4      {
+5      odwiedź v;
+6      IN[v] := krok;
+7      krok := krok + 1;
+8      dla każdego nieodwiedzonego sąsiada w wierzchołka v
+9          {
+10              TS(w);
+11          }
+12      OUT[v] := krok;
+13      }
+
+
+Algorytm Prima (Minimalne Drzewo Rozpinajace)
+
+1  Prim
+2  {
+3      stwórz listę TV = {s} // wierzchołki w drzewie
+4      stwórz listę T = {} // krawędzie w drzewie
+5      while T zawiera < n-1 krawędzi
+6      {
+7          znajdź (u,v) o najmniejszej wadze, taką, że u znajduje się w TV i v nie znajduje się w TV
+8          if taka krawędź nie istnieje
+9          {
+10              break;
+11          }
+12          TV.Add(v);
+13          T.Add({u,v});
+14      }
+15  }

@@ -1,0 +1,29 @@
+I.
+
+1. W ćwiczeniu rozważa się problem sortowania topologicznego acyklicznego grafu skierowanego - DAG'u.
+Zaimplementować procedurę generowania losowego DAG'u o nasyceniu krawędziami 60%.
+(DAG pełny ma ich n(n-1)/2 - gdzie n liczba wierzchołków).
+
+2. Niech G oznacza acykliczny graf skierowany. Zaimplementować algorytm sortowania topologicznego.
+Implementacja powinna być oparta na liście incydencji oraz na macierzy sąsiedztwa.
+
+3. Przeprowadzić pomiary czasu działania Algorytmu w zależności od liczby n wierzchołków w grafie.
+Wyniki przedstawić na wykresie t = f(n) dla dwóch reprezentacji grafu: macierz sąsiedztwa i lista incydencji.
+
+4. Sformułować wnioski odnośnie doboru odpowiedniej reprezentacji grafu dla problemu sortowania topologicznego.
+Podać zalety i wady wybranych reprezentacji w odniesieniu do badanego problemu.
+Podać i uzasadnić złożoność obliczeniową badanych algorytmów.
+
+II.
+
+1. Zaproponować Algorytm wyznaczania Minimalnego Drzewa Rozpinającego w grafie nieskierowanym z wagami na krawędziach.
+
+2. Dla losowo wygenerowanego grafu wejściowego przeprowadzić pomiary czasu działania Algorytmu
+w zależności od liczby wierzchołków przy nasycenie grafu krawędziami 30% (wykres 1) i 70% (wykres 2),
+wagi na krawędziach losowane z zakresu 1 - 1000).
+Wyniki przedstawić na 2 wykresach t = f(n), przynajmniej 15 punktów pomiarowych porównując dwie reprezentacje grafu:
+macierz sąsiedztwa i lista incydencji.
+
+
+3. Sformułować wnioski odnośnie doboru odpowiedniej reprezentacji grafu w zależności od jego gęstości.
+Podać i uzasadnić złożoność obliczeniową badanych algorytmów.
