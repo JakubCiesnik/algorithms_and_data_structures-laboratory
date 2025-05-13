@@ -1,204 +1,130 @@
-#include "dag.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <stdbool.h>
 
-// Private helper functions
-static void shuffle_nodes(int *array, int n) {
-    for (int i = n-1; i > 0; i--) {
-        int j = rand() % (i+1);
-        int temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
+// Load an n×n adjacency matrix from text file: first line is n
+int** load_matrix(const char* filename, int* out_n) {
+    FILE* fp = fopen(filename, "r");
+    if (!fp) { perror("load_matrix: fopen"); exit(EXIT_FAILURE); }
+
+    int n;
+    fscanf(fp, "%d", &n);
+    *out_n = n;
+
+    int** mat = malloc(n * sizeof(int*));
+    for (int i = 0; i < n; i++) {
+        mat[i] = malloc(n * sizeof(int));
+        for (int j = 0; j < n; j++) {
+            fscanf(fp, "%d", &mat[i][j]);
+        }
     }
+    fclose(fp);
+    return mat;
 }
 
-static void connect_nodes(DAG *dag, int *order) {
-    // Create spanning tree
-    for (int i = 1; i < dag->num_nodes; i++) {
-        int parent = rand() % i;
-        dag->adj_matrix[order[parent]][order[i]] = 1;
+// Store an n×n adjacency matrix to text file
+void store_matrix(const char* filename, int** mat, int n) {
+    FILE* fp = fopen(filename, "w");
+    if (!fp) { perror("store_matrix: fopen"); exit(EXIT_FAILURE); }
+
+    fprintf(fp, "%d\n", n);
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            fprintf(fp, "%d%s", mat[i][j], (j + 1 < n) ? " " : "\n");
+        }
     }
+    fclose(fp);
 }
 
-DAG* dag_create(int num_nodes, float saturation) {
-    // Validate input
-    if (num_nodes < 1) return NULL;
-    float min_sat = (num_nodes-1.0f)/(num_nodes*(num_nodes-1)/2);
-    if (saturation < min_sat) {
-        fprintf(stderr, "Saturation must be at least %.4f for connectivity\n", min_sat);
-        return NULL;
+// Simple linked-list node for adjacency lists
+typedef struct Node {
+    int        vertex;
+    struct Node* next;
+} Node;
+
+// Convert adjacency matrix -> adjacency list
+Node** matrix_to_list(int** mat, int n) {
+    Node** list = calloc(n, sizeof(Node*));
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < n; j++) {
+            if (mat[i][j]) {
+                Node* node = malloc(sizeof(Node));
+                node->vertex = j;
+                node->next   = list[i];
+                list[i]      = node;
+            }
+        }
     }
+    return list;
+}
 
-    // Allocate DAG structure
-    DAG *dag = malloc(sizeof(DAG));
-    dag->num_nodes = num_nodes;
-    dag->adj_matrix = malloc(num_nodes * sizeof(int*));
-    
-    // Initialize adjacency matrix
-    for (int i = 0; i < num_nodes; i++) {
-        dag->adj_matrix[i] = calloc(num_nodes, sizeof(int));
+// -----------------------------------------------------------------------------
+// Topological Sort: DFS-based (Adjacency Matrix)
+// -----------------------------------------------------------------------------
+
+// Helper DFS: mark visited, then push on stack
+static void dfs_visit(int u, int** mat, int n, int* visited, int* stack, int* top) {
+    visited[u] = 1;
+    for (int v = 0; v < n; v++) {
+        if (mat[u][v] && !visited[v]) {
+            dfs_visit(v, mat, n, visited, stack, top);
+        }
     }
+    stack[(*top)++] = u;
+}
 
-    // Create random node order
-    int *order = malloc(num_nodes * sizeof(int));
-    for (int i = 0; i < num_nodes; i++) order[i] = i;
-    shuffle_nodes(order, num_nodes);
+// Return array of size n containing one valid topological order
+int* topological_sort_matrix(int** mat, int n) {
+    int* visited = calloc(n, sizeof(int));
+    int* stack   = malloc(n * sizeof(int));
+    int  top_idx = 0;
 
-    // Phase 1: Ensure connectivity
-    connect_nodes(dag, order);
+    for (int i = 0; i < n; i++) {
+        if (!visited[i]) {
+            dfs_visit(i, mat, n, visited, stack, &top_idx);
+        }
+    }
+    // Reverse stack to get correct order
+    for (int i = 0; i < top_idx / 2; i++) {
+        int tmp = stack[i];
+        stack[i] = stack[top_idx - 1 - i];
+        stack[top_idx - 1 - i] = tmp;
+    }
+    free(visited);
+    return stack;
+}
 
-    // Phase 2: Add remaining edges
-    const int total_possible = num_nodes*(num_nodes-1)/2;
-    const int target_edges = saturation * total_possible;
-    int current_edges = num_nodes - 1;
-    
-    // Calculate probability for remaining edges
-    float p = (target_edges - current_edges) / 
-             (float)(total_possible - (num_nodes-1));
+// -----------------------------------------------------------------------------
+// Topological Sort: Kahn’s Algorithm (uses matrix->list internally)
+// -----------------------------------------------------------------------------
 
-    // Add edges probabilistically
-    for (int i = 0; i < num_nodes; i++) {
-        for (int j = i+1; j < num_nodes; j++) {
-            if (!dag->adj_matrix[order[i]][order[j]] && 
-               ((float)rand()/RAND_MAX) <= p) {
-                dag->adj_matrix[order[i]][order[j]] = 1;
-                current_edges++;
+int* topological_sort_list(int** mat, int n) {
+    // 1) Compute in-degrees
+    int* indeg = calloc(n, sizeof(int));
+    for (int u = 0; u < n; u++)
+        for (int v = 0; v < n; v++)
+            if (mat[u][v]) indeg[v]++;
+
+    // 2) Enqueue all zero in-degree vertices
+    int* queue = malloc(n * sizeof(int));
+    int  head = 0, tail = 0;
+    for (int i = 0; i < n; i++)
+        if (indeg[i] == 0) queue[tail++] = i;
+
+    // 3) Process the queue
+    int* order = malloc(n * sizeof(int));
+    int  idx   = 0;
+    while (head < tail) {
+        int u = queue[head++];
+        order[idx++] = u;
+        for (int v = 0; v < n; v++) {
+            if (mat[u][v] && --indeg[v] == 0) {
+                queue[tail++] = v;
             }
         }
     }
 
-    // Cleanup
-    free(order);
-    return dag;
+    free(indeg);
+    free(queue);
+    return order;
 }
 
-// Rest of file I/O functions...
-
-void dag_free(DAG *dag) {
-    for (int i = 0; i < dag->num_nodes; i++) {
-        free(dag->adj_matrix[i]);
-    }
-    free(dag->adj_matrix);
-    free(dag);
-}
-
-int dag_save_to_file(DAG *dag, const char *filename) {
-    FILE *file = fopen(filename, "w");
-    if (!file) return 0;
-    
-    for (int i = 0; i < dag->num_nodes; i++) {
-        for (int j = 0; j < dag->num_nodes; j++) {
-            fprintf(file, "%d ", dag->adj_matrix[i][j]);
-        }
-        fprintf(file, "\n");
-    }
-    fclose(file);
-    return 1;
-}
-
-DAG* dag_load_from_file(const char *filename) {
-    FILE *file = fopen(filename, "r");
-    if (!file) return NULL;
-    
-    // Count nodes (assuming square matrix)
-    int nodes = 0;
-    char ch;
-    while ((ch = fgetc(file)) != '\n' && ch != EOF) {
-        if (ch == ' ') nodes++;
-    }
-    nodes++;  // Last number in row
-    rewind(file);
-    
-    DAG *dag = dag_create(nodes);
-    
-    for (int i = 0; i < nodes; i++) {
-        for (int j = 0; j < nodes; j++) {
-            fscanf(file, "%d", &dag->adj_matrix[i][j]);
-        }
-    }
-    fclose(file);
-    return dag;
-}
-
-
-
-
-#include "dag.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <time.h>
-#include <stdbool.h>
-
-// Private helper functions
-static void shuffle_nodes(int *array, int n) {
-    for (int i = n-1; i > 0; i--) {
-        int j = rand() % (i+1);
-        int temp = array[i];
-        array[i] = array[j];
-        array[j] = temp;
-    }
-}
-
-static void connect_nodes(DAG *dag, int *order) {
-    // Create spanning tree
-    for (int i = 1; i < dag->num_nodes; i++) {
-        int parent = rand() % i;
-        dag->adj_matrix[order[parent]][order[i]] = 1;
-    }
-}
-
-DAG* dag_create(int num_nodes, float saturation) {
-    // Validate input
-    if (num_nodes < 1) return NULL;
-    float min_sat = (num_nodes-1.0f)/(num_nodes*(num_nodes-1)/2);
-    if (saturation < min_sat) {
-        fprintf(stderr, "Saturation must be at least %.4f for connectivity\n", min_sat);
-        return NULL;
-    }
-
-    // Allocate DAG structure
-    DAG *dag = malloc(sizeof(DAG));
-    dag->num_nodes = num_nodes;
-    dag->adj_matrix = malloc(num_nodes * sizeof(int*));
-    
-    // Initialize adjacency matrix
-    for (int i = 0; i < num_nodes; i++) {
-        dag->adj_matrix[i] = calloc(num_nodes, sizeof(int));
-    }
-
-    // Create random node order
-    int *order = malloc(num_nodes * sizeof(int));
-    for (int i = 0; i < num_nodes; i++) order[i] = i;
-    shuffle_nodes(order, num_nodes);
-
-    // Phase 1: Ensure connectivity
-    connect_nodes(dag, order);
-
-    // Phase 2: Add remaining edges
-    const int total_possible = num_nodes*(num_nodes-1)/2;
-    const int target_edges = saturation * total_possible;
-    int current_edges = num_nodes - 1;
-    
-    // Calculate probability for remaining edges
-    float p = (target_edges - current_edges) / 
-             (float)(total_possible - (num_nodes-1));
-
-    // Add edges probabilistically
-    for (int i = 0; i < num_nodes; i++) {
-        for (int j = i+1; j < num_nodes; j++) {
-            if (!dag->adj_matrix[order[i]][order[j]] && 
-               ((float)rand()/RAND_MAX) <= p) {
-                dag->adj_matrix[order[i]][order[j]] = 1;
-                current_edges++;
-            }
-        }
-    }
-
-    // Cleanup
-    free(order);
-    return dag;
-}
-
-// Rest of file I/O functions...
