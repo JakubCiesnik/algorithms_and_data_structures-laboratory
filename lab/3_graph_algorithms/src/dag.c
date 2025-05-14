@@ -1,6 +1,34 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+typedef struct Node {
+    int        vertex;
+    struct Node* next;
+} Node;
+
+
+/**
+ * Convert an adjacency matrix to an adjacency list.
+ * Assumes the matrix is n x n.
+ * Returns a pointer to an array of ListNode*.
+ */
+// Node** matrix_to_list(int** matrix, int n) {
+//     Node** adj_list = (Node**) malloc(n * sizeof(Node*));
+//     for (int i = 0; i < n; ++i) {
+//         adj_list[i] = NULL;
+//         for (int j = 0; j < n; ++j) {
+//             if (matrix[i][j] != 0) {
+//                 Node* node = (Node*) malloc(sizeof(Node));
+//                 node->vertex = j;
+//                 node->next = adj_list[i];
+//                 adj_list[i] = node;
+//             }
+//         }
+//     }
+//     return adj_list;
+// }
+
+
 // Load an n×n adjacency matrix from text file: first line is n
 int** load_matrix(const char* filename, int* out_n) {
     FILE* fp = fopen(filename, "r");
@@ -36,10 +64,6 @@ void store_matrix(const char* filename, int** mat, int n) {
 }
 
 // Simple linked-list node for adjacency lists
-typedef struct Node {
-    int        vertex;
-    struct Node* next;
-} Node;
 
 // Convert adjacency matrix -> adjacency list
 Node** matrix_to_list(int** mat, int n) {
@@ -97,34 +121,74 @@ int* topological_sort_matrix(int** mat, int n) {
 // Topological Sort: Kahn’s Algorithm (uses matrix->list internally)
 // -----------------------------------------------------------------------------
 
-int* topological_sort_list(int** mat, int n) {
-    // 1) Compute in-degrees
+// int* topological_sort_list(int** mat, int n) {
+//     // 1) Compute in-degrees
+//     int* indeg = calloc(n, sizeof(int));
+//     for (int u = 0; u < n; u++)
+//         for (int v = 0; v < n; v++)
+//             if (mat[u][v]) indeg[v]++;
+//
+//     // 2) Enqueue all zero in-degree vertices
+//     int* queue = malloc(n * sizeof(int));
+//     int  head = 0, tail = 0;
+//     for (int i = 0; i < n; i++)
+//         if (indeg[i] == 0) queue[tail++] = i;
+//
+//     // 3) Process the queue
+//     int* order = malloc(n * sizeof(int));
+//     int  idx   = 0;
+//     while (head < tail) {
+//         int u = queue[head++];
+//         order[idx++] = u;
+//         for (int v = 0; v < n; v++) {
+//             if (mat[u][v] && --indeg[v] == 0) {
+//                 queue[tail++] = v;
+//             }
+//         }
+//     }
+//
+//     free(indeg);
+//     free(queue);
+//     return order;
+// }
+int* topological_sort_list(Node** adj, int n) {
+    // 1) Compute in‐degrees in O(E)
     int* indeg = calloc(n, sizeof(int));
-    for (int u = 0; u < n; u++)
-        for (int v = 0; v < n; v++)
-            if (mat[u][v]) indeg[v]++;
+    for (int u = 0; u < n; u++) {
+        for (Node* p = adj[u]; p; p = p->next) {
+            indeg[p->vertex]++;
+        }
+    }
 
-    // 2) Enqueue all zero in-degree vertices
+    // 2) Enqueue all vertices with in‐degree 0
     int* queue = malloc(n * sizeof(int));
-    int  head = 0, tail = 0;
-    for (int i = 0; i < n; i++)
-        if (indeg[i] == 0) queue[tail++] = i;
+    int head = 0, tail = 0;
+    for (int i = 0; i < n; i++) {
+        if (indeg[i] == 0) {
+            queue[tail++] = i;
+        }
+    }
 
-    // 3) Process the queue
+    // 3) Process queue
     int* order = malloc(n * sizeof(int));
-    int  idx   = 0;
+    int idx = 0;
     while (head < tail) {
         int u = queue[head++];
         order[idx++] = u;
-        for (int v = 0; v < n; v++) {
-            if (mat[u][v] && --indeg[v] == 0) {
+
+        // Decrement neighbors’ in‐degrees
+        for (Node* p = adj[u]; p; p = p->next) {
+            int v = p->vertex;
+            if (--indeg[v] == 0) {
                 queue[tail++] = v;
             }
         }
     }
 
+    // Cleanup
     free(indeg);
     free(queue);
+
+    // If idx < n, the graph had a cycle; you might want to check that.
     return order;
 }
-
