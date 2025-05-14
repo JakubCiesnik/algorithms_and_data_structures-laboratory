@@ -1,55 +1,25 @@
-#include <stdlib.h>
-#include <time.h>
-#include <math.h>
+#include "mst.h"
 #include <stdio.h>
+#include <stdlib.h>
 
-// Reuse store_matrix from dag.c
-extern void store_matrix(const char*, int**, int);
+#define START_N 1000
+#define STEP_N 1000
+#define POINTS 15
+#define OUTPUT_DIR "dataset"
 
-// Generate a connected undirected weighted graph at given density
-static int** generate_mst_graph(int n, double density) {
-    int max_edges = n * (n - 1) / 2;
-    int target    = (int)ceil(density * max_edges);
+int main() {
+    const double densities[] = {0.3, 0.7};
 
-    int** w = calloc(n, sizeof(int*));
-    for (int i = 0; i < n; i++) {
-        w[i] = calloc(n, sizeof(int));
-    }
-
-    // Ensure connectivity: simple chain
-    for (int i = 0; i < n - 1; i++) {
-        int wt = rand() % 1000 + 1;
-        w[i][i + 1] = w[i + 1][i] = wt;
-    }
-    int count = n - 1;
-
-    // Add random edges until reaching desired density
-    while (count < target) {
-        int u = rand() % n, v = rand() % n;
-        if (u != v && !w[u][v]) {
-            int wt = rand() % 1000 + 1;
-            w[u][v] = w[v][u] = wt;
-            count++;
-        }
-    }
-
-    return w;
-}
-
-int main(void) {
-    srand((unsigned)time(NULL));
-
-    for (int n = 100; n <= 1000; n += 50) {
-        for (int d = 30; d <= 70; d += 40) {
-            double density = d / 100.0;
-            int** w = generate_mst_graph(n, density);
-
-            char filename[64];
-            snprintf(filename, sizeof(filename), "dataset/mst_%d_%d.txt", d, n);
-            store_matrix(filename, w, n);
-
-            for (int i = 0; i < n; i++) free(w[i]);
-            free(w);
+    for (int i = 0; i < POINTS; i++) {
+        int n = START_N + i * STEP_N;
+        for (int d = 0; d < 2; d++) {
+            double dens = densities[d];
+            int **mat = generate_mst_graph(n, dens);
+            char filename[256];
+            snprintf(filename, sizeof(filename), OUTPUT_DIR"/mst_%d_%.0f.txt", n, dens * 100);
+            save_matrix(filename, mat, n);
+            free_matrix(mat, n);
+            printf("Generated MST graph with %d nodes, %.0f%% density: %s\n", n, dens * 100, filename);
         }
     }
     return 0;

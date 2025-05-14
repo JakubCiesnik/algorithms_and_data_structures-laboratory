@@ -1,194 +1,99 @@
-#include <stdio.h>
+#include "dag.h"
 #include <stdlib.h>
+#include <time.h>
+#include <assert.h>
 
-typedef struct Node {
-    int        vertex;
-    struct Node* next;
-} Node;
+// Shuffle helper
+static void shuffle(int *a, int n) {
+    for (int i = n - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        int tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+}
 
+// Generate a connected DAG
+int **generate_dag(int n, double density) {
+    int **mat = alloc_matrix(n);
+    int *order = malloc(n * sizeof *order);
+    for (int i = 0; i < n; i++) order[i] = i;
+    shuffle(order, n);
 
-/**
- * Convert an adjacency matrix to an adjacency list.
- * Assumes the matrix is n x n.
- * Returns a pointer to an array of ListNode*.
- */
-// Node** matrix_to_list(int** matrix, int n) {
-//     Node** adj_list = (Node**) malloc(n * sizeof(Node*));
-//     for (int i = 0; i < n; ++i) {
-//         adj_list[i] = NULL;
-//         for (int j = 0; j < n; ++j) {
-//             if (matrix[i][j] != 0) {
-//                 Node* node = (Node*) malloc(sizeof(Node));
-//                 node->vertex = j;
-//                 node->next = adj_list[i];
-//                 adj_list[i] = node;
-//             }
-//         }
-//     }
-//     return adj_list;
-// }
+    // Map label -> position for easy checks
+    int *pos = malloc(n * sizeof *pos);
+    for (int i = 0; i < n; i++) pos[order[i]] = i;
 
+    // Ensure connectivity: a simple chain in topo order
+    for (int i = 0; i < n - 1; i++) {
+        int u = order[i], v = order[i+1];
+        mat[u][v] = 1;
+    }
 
-// Load an n×n adjacency matrix from text file: first line is n
-int** load_matrix(const char* filename, int* out_n) {
-    FILE* fp = fopen(filename, "r");
-    if (!fp) { perror("load_matrix: fopen"); exit(EXIT_FAILURE); }
+    int max_edges = n * (n - 1) / 2;
+    int target = (int)(density * max_edges);
+    int added = n - 1;
 
-    int n;
-    fscanf(fp, "%d", &n);
-    *out_n = n;
-
-    int** mat = malloc(n * sizeof(int*));
-    for (int i = 0; i < n; i++) {
-        mat[i] = malloc(n * sizeof(int));
-        for (int j = 0; j < n; j++) {
-            fscanf(fp, "%d", &mat[i][j]);
+    while (added < target) {
+        int i = rand() % n;
+        int j = rand() % n;
+        int u = order[i], v = order[j];
+        // Only forward edges in topo order
+        if (pos[u] < pos[v] && mat[u][v] == 0) {
+            mat[u][v] = 1;
+            added++;
         }
     }
-    fclose(fp);
+
+    free(order);
+    free(pos);
     return mat;
 }
 
-// Store an n×n adjacency matrix to text file
-void store_matrix(const char* filename, int** mat, int n) {
-    FILE* fp = fopen(filename, "w");
-    if (!fp) { perror("store_matrix: fopen"); exit(EXIT_FAILURE); }
-
-    fprintf(fp, "%d\n", n);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            fprintf(fp, "%d%s", mat[i][j], (j + 1 < n) ? " " : "\n");
-        }
-    }
-    fclose(fp);
-}
-
-// Simple linked-list node for adjacency lists
-
-// Convert adjacency matrix -> adjacency list
-Node** matrix_to_list(int** mat, int n) {
-    Node** list = calloc(n, sizeof(Node*));
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            if (mat[i][j]) {
-                Node* node = malloc(sizeof(Node));
-                node->vertex = j;
-                node->next   = list[i];
-                list[i]      = node;
-            }
-        }
-    }
-    return list;
-}
-
-// -----------------------------------------------------------------------------
-// Topological Sort: DFS-based (Adjacency Matrix)
-// -----------------------------------------------------------------------------
-
-// Helper DFS: mark visited, then push on stack
-static void dfs_visit(int u, int** mat, int n, int* visited, int* stack, int* top) {
-    visited[u] = 1;
+// ---------- Topo sort (matrix via DFS) ----------
+static void dfs_mat(int u, int **m, int n, int *vis, int *stack, int *sp) {
+    vis[u] = 1;
     for (int v = 0; v < n; v++) {
-        if (mat[u][v] && !visited[v]) {
-            dfs_visit(v, mat, n, visited, stack, top);
-        }
+        if (m[u][v] && !vis[v]) dfs_mat(v, m, n, vis, stack, sp);
     }
-    stack[(*top)++] = u;
+    stack[(*sp)++] = u;
 }
 
-// Return array of size n containing one valid topological order
-int* topological_sort_matrix(int** mat, int n) {
-    int* visited = calloc(n, sizeof(int));
-    int* stack   = malloc(n * sizeof(int));
-    int  top_idx = 0;
-
+void topo_sort_matrix(int **mat, int n, int *out_order) {
+    int *vis = calloc(n, sizeof *vis);
+    int *stack = malloc(n * sizeof *stack);
+    int sp = 0;
     for (int i = 0; i < n; i++) {
-        if (!visited[i]) {
-            dfs_visit(i, mat, n, visited, stack, &top_idx);
-        }
+        if (!vis[i]) dfs_mat(i, mat, n, vis, stack, &sp);
     }
-    // Reverse stack to get correct order
-    for (int i = 0; i < top_idx / 2; i++) {
-        int tmp = stack[i];
-        stack[i] = stack[top_idx - 1 - i];
-        stack[top_idx - 1 - i] = tmp;
+    // reverse
+    for (int i = 0; i < n; i++) {
+        out_order[i] = stack[n - 1 - i];
     }
-    free(visited);
-    return stack;
+    free(vis);
+    free(stack);
 }
 
-// -----------------------------------------------------------------------------
-// Topological Sort: Kahn’s Algorithm (uses matrix->list internally)
-// -----------------------------------------------------------------------------
-
-// int* topological_sort_list(int** mat, int n) {
-//     // 1) Compute in-degrees
-//     int* indeg = calloc(n, sizeof(int));
-//     for (int u = 0; u < n; u++)
-//         for (int v = 0; v < n; v++)
-//             if (mat[u][v]) indeg[v]++;
-//
-//     // 2) Enqueue all zero in-degree vertices
-//     int* queue = malloc(n * sizeof(int));
-//     int  head = 0, tail = 0;
-//     for (int i = 0; i < n; i++)
-//         if (indeg[i] == 0) queue[tail++] = i;
-//
-//     // 3) Process the queue
-//     int* order = malloc(n * sizeof(int));
-//     int  idx   = 0;
-//     while (head < tail) {
-//         int u = queue[head++];
-//         order[idx++] = u;
-//         for (int v = 0; v < n; v++) {
-//             if (mat[u][v] && --indeg[v] == 0) {
-//                 queue[tail++] = v;
-//             }
-//         }
-//     }
-//
-//     free(indeg);
-//     free(queue);
-//     return order;
-// }
-int* topological_sort_list(Node** adj, int n) {
-    // 1) Compute in‐degrees in O(E)
-    int* indeg = calloc(n, sizeof(int));
+// ---------- Topo sort (Kahn's, adjacency list) ----------
+void topo_sort_list(AdjNode **adj, int n, int *out_order) {
+    int *indeg = calloc(n, sizeof *indeg);
     for (int u = 0; u < n; u++) {
-        for (Node* p = adj[u]; p; p = p->next) {
-            indeg[p->vertex]++;
+        for (AdjNode *p = adj[u]; p; p = p->next) {
+            indeg[p->v]++;
         }
     }
-
-    // 2) Enqueue all vertices with in‐degree 0
-    int* queue = malloc(n * sizeof(int));
-    int head = 0, tail = 0;
+    int *queue = malloc(n * sizeof *queue);
+    int qh = 0, qt = 0;
     for (int i = 0; i < n; i++) {
-        if (indeg[i] == 0) {
-            queue[tail++] = i;
-        }
+        if (indeg[i] == 0) queue[qt++] = i;
     }
-
-    // 3) Process queue
-    int* order = malloc(n * sizeof(int));
     int idx = 0;
-    while (head < tail) {
-        int u = queue[head++];
-        order[idx++] = u;
-
-        // Decrement neighbors’ in‐degrees
-        for (Node* p = adj[u]; p; p = p->next) {
-            int v = p->vertex;
-            if (--indeg[v] == 0) {
-                queue[tail++] = v;
-            }
+    while (qh < qt) {
+        int u = queue[qh++];
+        out_order[idx++] = u;
+        for (AdjNode *p = adj[u]; p; p = p->next) {
+            if (--indeg[p->v] == 0) queue[qt++] = p->v;
         }
     }
-
-    // Cleanup
+    assert(idx == n);  // must remain a DAG
     free(indeg);
     free(queue);
-
-    // If idx < n, the graph had a cycle; you might want to check that.
-    return order;
 }

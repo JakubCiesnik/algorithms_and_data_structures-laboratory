@@ -1,45 +1,36 @@
-# Makefile for Graph Algorithms Benchmark
+CC     = gcc
+CFLAGS = -O3 -std=c99 -Wall -Wextra -Isrc
+SRC    = src
+DATA   = dataset
+RESULT = results
+TGT    = target
 
-CC        := gcc
-CFLAGS    := -O3 -Wall -Wextra
-SRCDIR    := src
-TARGETDIR := target
-DATADIR   := dataset
-RESDIR    := results
-
-DAGGEN    := $(TARGETDIR)/daggen
-MSTGEN    := $(TARGETDIR)/mstgen
-BENCH     := $(TARGETDIR)/benchmark
-
-# Source files
-DAG_SRC   := $(SRCDIR)/dag.c
-DAGGEN_SRC:= $(SRCDIR)/daggen.c
-MST_SRC   := $(SRCDIR)/mst.c
-MSTGEN_SRC:= $(SRCDIR)/mstgen.c
-BENCH_SRC := $(SRCDIR)/benchmark.c
-
-.PHONY: all clean dirs
-
-all: dirs $(DAGGEN) $(MSTGEN) $(BENCH)
+all: dirs $(TGT)/daggen $(TGT)/mstgen $(TGT)/benchmark
 
 dirs:
-	@mkdir -p $(TARGETDIR) $(DATADIR) $(RESDIR)
+	mkdir -p $(TGT) $(DATA) $(RESULT)
 
-# Build daggen (generates DAG datasets)
-$(DAGGEN): $(DAGGEN_SRC) $(DAG_SRC)
-	$(CC) $(CFLAGS) -o $@ $(DAGGEN_SRC) $(DAG_SRC) -lm
+$(TGT)/daggen: $(SRC)/daggen.c $(SRC)/dag.c $(SRC)/graph_utils.c \
+               $(SRC)/dag.h $(SRC)/graph_utils.h
+	$(CC) $(CFLAGS) $^ -o $@
 
-# Build mstgen (generates MST datasets)
-$(MSTGEN): $(MSTGEN_SRC) $(MST_SRC) $(DAG_SRC)
-	$(CC) $(CFLAGS) -o $@ $(MSTGEN_SRC) $(MST_SRC) $(DAG_SRC) -lm
+$(TGT)/mstgen: $(SRC)/mstgen.c $(SRC)/mst.c $(SRC)/graph_utils.c \
+               $(SRC)/mst.h $(SRC)/graph_utils.h
+	$(CC) $(CFLAGS) $^ -o $@
 
-# Build benchmark (runs all benchmarks)
-$(BENCH): $(BENCH_SRC) $(DAG_SRC) $(MST_SRC)
-	$(CC) $(CFLAGS) -o $@ $(BENCH_SRC) $(DAG_SRC) $(MST_SRC) -lm
+$(TGT)/benchmark: $(SRC)/benchmark.c \
+                  $(SRC)/dag.c $(SRC)/mst.c $(SRC)/graph_utils.c \
+                  $(SRC)/dag.h $(SRC)/mst.h $(SRC)/graph_utils.h
+	$(CC) $(CFLAGS) $^ -o $@ -lrt
 
-# Clean binaries and results
+.PHONY: clean generate benchmark
+
+generate: all
+	$(TGT)/daggen
+	$(TGT)/mstgen
+
+benchmark: generate
+	$(TGT)/benchmark
+
 clean:
-	rm -rf $(TARGETDIR)/*
-	rm -rf $(DATADIR)/*.txt
-	rm -rf $(RESDIR)/*.csv
-
+	rm -rf $(TGT) $(DATA) $(RESULT)
