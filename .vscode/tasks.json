@@ -1,0 +1,48 @@
+// Custom build task for building and running C code and debugging it. Output in target folder and copiles with additional math library
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "build C in target",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "${file}",
+                "-o",
+                "${fileDirname}/target/${fileBasenameNoExtension}",
+                "-lm"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Builds C file to target directory inside file's folder."
+        }
+        // modified on 25.05.2025, might delete later
+
+        // ,
+        // {
+        //     "type": "shell",
+        //     "label": "run folder make",
+        //     "command": "make",
+        //     "args": ["test_graph"],
+        //     "options": {
+        //         "cwd": "${fileDirname}"
+        //     },
+        //     "group": {
+        //         "kind": "build",
+        //         "isDefault": false
+        //     },
+        //     "problemMatcher": ["$gcc"],
+        //     "detail": "Builds make using Makefile."
+        // }
+    ]
+}

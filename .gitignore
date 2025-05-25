@@ -31,5 +31,5 @@
 *.out
 *.app
 
-# Vscode configs
-.vscode
+# Vscode configs - modified 25.05.2025, actually useful for transferring building task
+# .vscode

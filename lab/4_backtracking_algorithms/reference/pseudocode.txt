@@ -1,0 +1,32 @@
+Algorytm znajdowania CYKLU EULERA w grafie
+1  Euler(v)
+2   {
+3     stwórz listę C; //lista zawierająca wierzchołki tworzące cykl 
+4     dla każdego wierzchołka w takiego, że istnieje nieodwiedzona krawędź z v do w
+5      {
+6        odwiedź krawędź {v, w}
+7        Euler(w);
+8      }
+9     C.Add(v);
+10  }
+
+Algorytm poszukiwania CYKLU HAMILTONA w grafie
+1  Inicjalizacja:
+2      stwórz listę V; //lista zawierająca odwiedzone wierzchołki
+3  
+4  Hamilton(v)
+5  {
+6          V.Add(v);
+7          dla każdego nieodwiedzonego sąsiada w wierzchołka v
+8          {
+9              Hamilton(w);
+10          }
+11          if V zawiera wszystkie wierzchołki grafu i istnieje krawędź z v do źródła
+12          {
+13              cykl znaleziony
+14          }
+15          else
+16          {
+17              V.Remove(v);
+18          }
+19  }
