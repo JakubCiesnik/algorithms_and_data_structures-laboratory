@@ -9,7 +9,11 @@
 
 int main() {
     srand(time(NULL));
-    int n_values[15] = {100,150,200,250,300,350,400,450,500,550,600,650,700,750,800};
+    int n_values[15] = {
+        200, 400, 600, 800, 1000,
+        1200, 1400, 1600, 1800, 2000,
+        2200, 2400, 2600, 2800, 3000
+    };
     double densities[2] = {0.3, 0.7};
     const char* density_labels[2] = {"sparse","dense"};
     FILE* f = fopen("results.csv", "w");
