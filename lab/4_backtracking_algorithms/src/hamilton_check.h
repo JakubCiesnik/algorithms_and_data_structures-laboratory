@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 
-#define MAX_V 1000
+#define MAX_V 800
 
 typedef struct {
     int matrix[MAX_V][MAX_V];

@@ -5,7 +5,9 @@
 int is_connected(Graph* g) {
     int n = g->num_nodes;
     int* visited = calloc(n, sizeof(int));
-    int stack[n], top = 0;
+    // int stack[n], top = 0;
+    int* stack = malloc(n * sizeof(int)); // fix
+    int top = 0; // fix
     stack[top++] = 0;
     visited[0] = 1;
     int count = 1;
@@ -21,6 +23,7 @@ int is_connected(Graph* g) {
     }
     int result = (count == n);
     free(visited);
+    free(stack);
     return result;
 }
 
