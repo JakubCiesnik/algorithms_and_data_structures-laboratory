@@ -1,5 +1,19 @@
 I.
 - Wygeneruj 2 spójne eulerowskie i hamiltonowskie (jednocześnie) grafy nieskierowane o n wierzchołkach;
+    - Jak wygenerować grafy, które są jednocześnie eulerowskie i hamiltonowskie? (nieskierowane, n wierzchołków)
+        - wymagania:
+            - graf jest spójny,
+            - graf jest nieskierowany,
+            - graf ma n wierzchołków,
+            - graf jest eulerowski:
+                - każdy wierzchołek ma parzysty stopień,
+                - istnieje cykl Eulera (przechodzący przez każdą krawędź dokładnie raz),
+            - graf jest hamiltonowski:
+                - istnieje cykl Hamiltona (przechodzący przez każdy wierzchołek dokładnie raz),
+        - realizacja:
+            1. Utwórz cykl Hamiltona (np. 0-1-2-...-n-1-0).
+            2. Dodaj dodatkowe krawędzie pomiędzy parami wierzchołków tak, aby stopnie wszystkich wierzchołków były parzyste (nie usuwając cyklu Hamiltona).
+            3. Sprawdź, czy graf pozostał spójny.
 - współczynnik nasycenia krawędziami w grafach powinien być równy odpowiednio 30% (graf rzadki) i 70% (graf gęsty);
 (reprezentację grafu może być dowolna);
 - zaimplementuj algorytm A znajdowania cyklu Eulera w grafie,
@@ -17,8 +31,12 @@ W pierwszym zadaniu najpierw mierzymy czas znalezenie pierwszego cyklu eulera i 
 
 Czyli jak gęstość grafu wpływa na czas znalezenia takiego cyklu.
 
-
 II.
 - utwórz hamiltonowski graf nieskierowany (z nasyceniem krawędziami równym 50%),
 - znajdz wszystkie możliwe cykle Hamiltona w grafie stosując algorytm B (przeszukanie wszystkich możliwych ścieżek),
 - wyniki przedstaw na wykresie t=f(n).
+
+Znajomość:
+- idei działania algorytmów z powracaniem,
+- problemów znajdowania cyklu Eulera i Hamiltona w grafie nieskierowanym oraz ich przynależności do odpowiednich klas złożoności obliczeniowej,
+- idei algorytmu z powracaniem dla problemu znajdowania cyklu Hamiltona.

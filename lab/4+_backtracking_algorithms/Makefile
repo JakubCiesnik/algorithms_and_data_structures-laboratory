@@ -1,38 +1,40 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -std=c99 -O2
 LDFLAGS = -lm
-SRCDIR = src
-TARGETDIR = target
-RESULTSDIR = results
 
-# Object files
-OBJS = $(TARGETDIR)/graph.o $(TARGETDIR)/graph_generator.o $(TARGETDIR)/algorithms.o
+# Source files
+SOURCES = src/graph.c src/graph_generator.c src/find_euler.c src/find_hamilton.c src/main.c
+TARGET = target/main
 
-# Create directories
-$(shell mkdir -p $(TARGETDIR) $(RESULTSDIR))
+# Build and run the main program
+run: $(TARGET)
+	@mkdir -p results
+	./$(TARGET)
 
-# Main targets
-all: $(TARGETDIR)/main $(TARGETDIR)/debug
+# Build target
+$(TARGET): $(SOURCES) src/graph.h
+	@mkdir -p target
+	$(CC) $(CFLAGS) $(SOURCES) -o $(TARGET) $(LDFLAGS)
 
-$(TARGETDIR)/main: $(OBJS) $(TARGETDIR)/main.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+# Graph visualization
+graph:
+	python3 graph_visualizer.py
 
-$(TARGETDIR)/debug: $(OBJS) $(TARGETDIR)/debug.o
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+# Generate Plot
+plot:
+	python3 plot_results.py
 
-# Object file rules
-$(TARGETDIR)/%.o: $(SRCDIR)/%.c $(SRCDIR)/graph.h
-	$(CC) $(CFLAGS) -c $< -o $@
-
-# Run targets
-run: $(TARGETDIR)/main
-	cd $(TARGETDIR) && ./main
-
-debug: $(TARGETDIR)/debug
-	cd $(TARGETDIR) && ./debug
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  run              - Build and run the main program"
+	@echo "  graph            - Run the graph visualizer (Python)"
+	@echo "  plot             - Run the plot generator (Python)"
+	@echo "  clean            - Remove all build artifacts"
+	@echo "  help             - Show this help message"
 
 # Clean
 clean:
-	rm -rf $(TARGETDIR)/*.o $(TARGETDIR)/main $(TARGETDIR)/debug
+	rm -rf target
 
-.PHONY: all run debug clean
+.PHONY: run graph help clean plot

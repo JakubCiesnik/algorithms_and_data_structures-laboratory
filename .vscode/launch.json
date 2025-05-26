@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug Current C File (Smart)",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/target/${fileBasenameNoExtension}",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build C in target",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "internalConsoleOptions": "openOnSessionStart"
+        }
+    ]
+}

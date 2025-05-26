@@ -45,12 +45,6 @@ def plot_results():
     print(f"Average Hamilton time (30%): {df['hamilton_sparse_time'].mean():.6f} seconds")
     print(f"Average Euler time (70%): {df['euler_dense_time'].mean():.6f} seconds")
     print(f"Average Hamilton time (70%): {df['hamilton_dense_time'].mean():.6f} seconds")
-    
-    print("\n=== Complexity Observations ===")
-    print("1. Euler cycle algorithm shows linear growth with graph size")
-    print("2. Hamilton cycle algorithm shows exponential growth (backtracking)")
-    print("3. Dense graphs generally take longer for Hamilton cycle due to more paths to explore")
-    print("4. Euler cycle performance is less affected by density since it depends on edge traversal")
 
 if __name__ == "__main__":
     plot_results()

@@ -118,17 +118,6 @@ bool is_eulerian(Graph* graph) {
     return true;
 }
 
-bool is_hamiltonian_naive(Graph* graph) {
-    if (graph->vertices < 3) return false;
-    
-    IntList* cycle = find_hamilton_cycle(graph);
-    if (cycle) {
-        free_list(cycle);
-        return true;
-    }
-    return false;
-}
-
 // List functions
 IntList* create_list(int capacity) {
     IntList* list = (IntList*)malloc(sizeof(IntList));

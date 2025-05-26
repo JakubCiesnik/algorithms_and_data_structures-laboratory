@@ -1,227 +1,107 @@
 #include "graph.h"
 
-// Graph generation functions
+// Generate Eulerian + Hamiltonian graph
 Graph* generate_eulerian_hamiltonian_graph(int vertices, double edge_density) {
     Graph* graph = create_graph(vertices);
+    srand(time(NULL) + vertices);
     
-    // First create a Hamiltonian cycle to ensure the graph is Hamiltonian
+    // 1. Create Hamilton cycle
     make_hamiltonian_cycle(graph);
     
-    // Then add edges to reach target density while maintaining Eulerian property
-    add_random_edges_for_euler(graph, edge_density);
+    // print_graph(graph); // DEBUG
+
+    // 2. Add triangles for density (euler)
+    add_triangles_for_density(graph, edge_density);
     
-    // CRITICAL: Ensure Eulerian property is guaranteed
-    ensure_eulerian_property(graph);
+    // print_graph(graph); // DEBUG
+
+    // 3. Randomize to hide obvious cycle (make hamilton not too fast)
+    randomize_vertex_ordering(graph);
     
-    // Verify the result
-    if (!is_eulerian(graph) || !is_connected(graph)) {
-        // If still not Eulerian, force it to be Eulerian
-        force_eulerian_property(graph);
-    }
-    
+    // print_graph(graph); // DEBUG
+
     return graph;
 }
 
+// Create basic Hamilton cycle: 0->1->2->...->n-1->0
 void make_hamiltonian_cycle(Graph* graph) {
-    // Create a cycle: 0 -> 1 -> 2 -> ... -> (n-1) -> 0
     for (int i = 0; i < graph->vertices; i++) {
         int next = (i + 1) % graph->vertices;
         add_edge(graph, i, next);
     }
 }
 
-void add_random_edges_for_euler(Graph* graph, double target_density) {
+// Add triangles to increase density while keeping Eulerian property
+void add_triangles_for_density(Graph* graph, double edge_density) {
     int max_edges = (graph->vertices * (graph->vertices - 1)) / 2;
-    int target_edges = (int)(max_edges * target_density);
+    int target_edges = (int)(max_edges * edge_density);
     
-    // If target is less than current edges, we're done
-    if (target_edges <= graph->edges) {
-        return;
-    }
+    if (graph->edges >= target_edges) return;
     
-    srand(time(NULL) + graph->vertices); // Better seed to avoid same random sequence
-    
-    // Simple approach: just add random edges, we'll fix Eulerian property later
     int attempts = 0;
-    int max_attempts = graph->vertices * graph->vertices; // Reasonable limit
+    int max_attempts = graph->vertices * graph->vertices;
     
-    while (graph->edges < target_edges && attempts < max_attempts) {
-        int u = rand() % graph->vertices;
-        int v = rand() % graph->vertices;
+    // Add complete triangles (3 new edges at once)
+    while (graph->edges + 3 <= target_edges && attempts < max_attempts) {
+        int v1 = rand() % graph->vertices;
+        int v2 = rand() % graph->vertices;
+        int v3 = rand() % graph->vertices;
         
-        if (u != v && !has_edge(graph, u, v)) {
-            add_edge(graph, u, v);
+        if (v1 != v2 && v2 != v3 && v1 != v3) {
+            if (try_add_triangle(graph, v1, v2, v3)) {
+                continue;
+            }
         }
-        
         attempts++;
     }
 }
 
-void ensure_eulerian_property(Graph* graph) {
-    int max_iterations = 20; // Increase iterations
-    int iteration = 0;
+bool try_add_triangle(Graph* graph, int v1, int v2, int v3) {
+    // Check if all three edges of the triangle don't exist yet
+    bool edge1_new = !has_edge(graph, v1, v2);
+    bool edge2_new = !has_edge(graph, v2, v3);
+    bool edge3_new = !has_edge(graph, v3, v1);
     
-    while (iteration < max_iterations) {
-        // Collect all vertices with odd degree
-        int odd_vertices[graph->vertices];
-        int odd_count = 0;
-        
-        for (int i = 0; i < graph->vertices; i++) {
-            int degree = 0;
-            for (int j = 0; j < graph->vertices; j++) {
-                degree += graph->adjacency_matrix[i][j];
-            }
-            if (degree % 2 != 0) {
-                odd_vertices[odd_count] = i;
-                odd_count++;
-            }
-        }
-        
-        // If no odd vertices, we're done (Eulerian)
-        if (odd_count == 0) {
-            return;
-        }
-        
-        // Connect odd vertices in pairs
-        for (int i = 0; i < odd_count - 1; i += 2) {
-            int u = odd_vertices[i];
-            int v = odd_vertices[i + 1];
-            
-            if (!has_edge(graph, u, v)) {
-                add_edge(graph, u, v);
-            }
-        }
-        
-        // If odd number of odd vertices, connect the last one to the first
-        if (odd_count % 2 == 1) {
-            int last_odd = odd_vertices[odd_count - 1];
-            int first_odd = odd_vertices[0];
-            if (!has_edge(graph, last_odd, first_odd)) {
-                add_edge(graph, last_odd, first_odd);
-            }
-        }
-        
-        iteration++;
+    // We need all three edges to be new to form a proper triangle
+    if (edge1_new && edge2_new && edge3_new) {
+        add_edge(graph, v1, v2);
+        add_edge(graph, v2, v3);
+        add_edge(graph, v3, v1);
+        return true;
+    }
+    
+    return false;
+}
+
+// Swap two vertices in adjacency matrix
+void swap_vertices(Graph* graph, int v1, int v2) {
+    if (v1 == v2 || v1 >= graph->vertices || v2 >= graph->vertices) {
+        return;
+    }
+    
+    // Swap rows
+    int* temp_row = graph->adjacency_matrix[v1];
+    graph->adjacency_matrix[v1] = graph->adjacency_matrix[v2];
+    graph->adjacency_matrix[v2] = temp_row;
+    
+    // Swap columns
+    for (int i = 0; i < graph->vertices; i++) {
+        int temp = graph->adjacency_matrix[i][v1];
+        graph->adjacency_matrix[i][v1] = graph->adjacency_matrix[i][v2];
+        graph->adjacency_matrix[i][v2] = temp;
     }
 }
 
-// Force Eulerian property as a last resort
-void force_eulerian_property(Graph* graph) {
-    // Keep iterating until all vertices have even degree
-    int max_iterations = 50;
-    int iteration = 0;
+// Randomize vertex ordering to hide obvious Hamilton cycle
+void randomize_vertex_ordering(Graph* graph) {
+    int num_swaps = graph->vertices * 2;
     
-    while (iteration < max_iterations) {
-        // Check if already Eulerian
-        bool all_even = true;
-        for (int i = 0; i < graph->vertices; i++) {
-            int degree = 0;
-            for (int j = 0; j < graph->vertices; j++) {
-                degree += graph->adjacency_matrix[i][j];
-            }
-            if (degree % 2 != 0) {
-                all_even = false;
-                break;
-            }
-        }
+    for (int i = 0; i < num_swaps; i++) {
+        int v1 = rand() % graph->vertices;
+        int v2 = rand() % graph->vertices;
         
-        if (all_even) {
-            return; // Already Eulerian
-        }
-        
-        // Find all odd-degree vertices
-        int odd_vertices[graph->vertices];
-        int odd_count = 0;
-        
-        for (int i = 0; i < graph->vertices; i++) {
-            int degree = 0;
-            for (int j = 0; j < graph->vertices; j++) {
-                degree += graph->adjacency_matrix[i][j];
-            }
-            if (degree % 2 != 0) {
-                odd_vertices[odd_count] = i;
-                odd_count++;
-            }
-        }
-        
-        // Connect pairs of odd vertices
-        for (int i = 0; i < odd_count - 1; i += 2) {
-            int u = odd_vertices[i];
-            int v = odd_vertices[i + 1];
-            
-            if (!has_edge(graph, u, v)) {
-                add_edge(graph, u, v);
-            } else {
-                // If already connected, add a different edge
-                bool added = false;
-                for (int k = 0; k < graph->vertices && !added; k++) {
-                    if (k != u && !has_edge(graph, u, k)) {
-                        add_edge(graph, u, k);
-                        added = true;
-                    }
-                }
-            }
-        }
-        
-        // If odd number of odd vertices, connect last one to first one
-        if (odd_count % 2 == 1) {
-            int last = odd_vertices[odd_count - 1];
-            int first = odd_vertices[0];
-            
-            if (!has_edge(graph, last, first)) {
-                add_edge(graph, last, first);
-            } else {
-                // Add any edge to make it even
-                for (int k = 0; k < graph->vertices; k++) {
-                    if (k != last && !has_edge(graph, last, k)) {
-                        add_edge(graph, last, k);
-                        break;
-                    }
-                }
-            }
-        }
-        
-        iteration++;
-    }
-}
-
-// Simple backup method to create Eulerian Hamiltonian graphs
-Graph* create_simple_eulerian_hamiltonian_graph(int vertices, double edge_density) {
-    Graph* graph = create_graph(vertices);
-    
-    // Create Hamiltonian cycle first
-    make_hamiltonian_cycle(graph);
-    
-    // For Eulerian property, add edges in pairs only
-    int max_edges = (vertices * (vertices - 1)) / 2;
-    int target_edges = (int)(max_edges * edge_density);
-    
-    srand(time(NULL) + vertices * 13); // Different seed
-    
-    // Add pairs of edges to maintain even degrees
-    while (graph->edges < target_edges - 1) { // Leave room for pairs
-        int u = rand() % vertices;
-        int v = rand() % vertices;
-        
-        if (u != v && !has_edge(graph, u, v)) {
-            add_edge(graph, u, v);
-            
-            // If we still have room, add another edge to maintain even degrees
-            if (graph->edges < target_edges) {
-                int x, y;
-                int attempts = 0;
-                do {
-                    x = rand() % vertices;
-                    y = rand() % vertices;
-                    attempts++;
-                } while ((x == y || has_edge(graph, x, y)) && attempts < 100);
-                
-                if (attempts < 100) {
-                    add_edge(graph, x, y);
-                }
-            }
+        if (v1 != v2) {
+            swap_vertices(graph, v1, v2);
         }
     }
-    
-    return graph;
 }
