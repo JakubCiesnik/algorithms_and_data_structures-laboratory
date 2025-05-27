@@ -80,7 +80,7 @@ void swap_vertices(Graph* graph, int v1, int v2) {
     }
     
     // Swap rows
-    int* temp_row = graph->adjacency_matrix[v1];
+    bool* temp_row = graph->adjacency_matrix[v1];
     graph->adjacency_matrix[v1] = graph->adjacency_matrix[v2];
     graph->adjacency_matrix[v2] = temp_row;
     

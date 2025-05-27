@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "graph.h"
 
 // Graph functions
@@ -7,9 +8,9 @@ Graph* create_graph(int vertices) {
     graph->edges = 0;
     
     // Allocate adjacency matrix
-    graph->adjacency_matrix = (int**)malloc(vertices * sizeof(int*));
+    graph->adjacency_matrix = (bool**)malloc(vertices * sizeof(bool*));
     for (int i = 0; i < vertices; i++) {
-        graph->adjacency_matrix[i] = (int*)calloc(vertices, sizeof(int));
+        graph->adjacency_matrix[i] = (bool*)calloc(vertices, sizeof(bool));
     }
     
     return graph;

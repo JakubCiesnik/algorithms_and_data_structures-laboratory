@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "graph.h"
 
 static IntList* V; // lista zawierająca odwiedzone wierzchołki
@@ -40,6 +41,82 @@ void hamilton(Graph* graph, int v) {
     if (!cycle_found) {
         remove_from_list(V, v);
     }
+}
+
+SearchState* init_search_state(int vertices, int start_vertex) {
+    SearchState *state = malloc(sizeof(SearchState));
+    state->visited = malloc(vertices * sizeof(bool));
+    state->path = malloc(vertices * sizeof(int));
+    state->path_size = 0;
+    state->used_count = 0;
+    state->start_vertex = start_vertex;
+    
+    for (int i = 0; i < vertices; i++) {
+        state->visited[i] = false;
+    }
+    return state;
+}
+
+void free_search_state(SearchState *state) {
+    free(state->visited);
+    free(state->path);
+    free(state);
+}
+
+int next_successor(const Graph *graph, int v, int current) {
+    for (int i = current + 1; i < graph->vertices; i++) {
+        if (graph->adjacency_matrix[v][i]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool find_hamiltonian_path(Graph *graph, SearchState *state, int v) {
+    state->visited[v] = true;
+    state->used_count++;
+    
+    // Try all successors
+    for (int i = next_successor(graph, v, -1); i != -1; i = next_successor(graph, v, i)) {
+        if (i == state->start_vertex) {
+            if (state->used_count == graph->vertices) {
+                state->path[state->path_size++] = v;
+                return true;
+            }
+        }
+        
+        if (!state->visited[i]) {
+            if (find_hamiltonian_path(graph, state, i)) {
+                state->path[state->path_size++] = v;
+                return true;
+            }
+        }
+    }
+    
+    // Backtrack
+    state->visited[v] = false;
+    state->used_count--;
+    return false;
+}
+
+bool hamiltonian_cycle(Graph *graph, int start_vertex, int **cycle, int *cycle_length) {
+    SearchState *state = init_search_state(graph->vertices, start_vertex);
+    bool found = find_hamiltonian_path(graph, state, start_vertex);
+    
+    if (found) {
+        // Complete the cycle by adding start vertex at the end
+        *cycle_length = graph->vertices + 1;
+        *cycle = malloc(*cycle_length * sizeof(int));
+        
+        // Copy the path in reverse order (from recursive calls)
+        for (int i = 0; i < graph->vertices; i++) {
+            (*cycle)[i] = state->path[graph->vertices - 1 - i];
+        }
+        (*cycle)[graph->vertices] = start_vertex;
+    }
+   
+    free_search_state(state);
+    return found;
 }
 
 // Find Hamilton cycle

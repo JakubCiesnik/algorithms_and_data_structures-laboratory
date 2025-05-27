@@ -8,7 +8,7 @@
 #include <string.h>
 
 typedef struct {
-    int **adjacency_matrix;
+    bool **adjacency_matrix;
     int vertices;
     int edges;
 } Graph;
@@ -18,6 +18,14 @@ typedef struct {
     int size;
     int capacity;
 } IntList;
+
+typedef struct {
+    bool *visited;
+    int *path;
+    int path_size;
+    int used_count;
+    int start_vertex;
+} SearchState;
 
 // Graph functions
 Graph* create_graph(int vertices);
@@ -51,7 +59,9 @@ void euler(Graph* graph, int v, bool **visited_edges);
 // Simple Hamilton cycle finder (find_hamilton.c)
 IntList* find_hamilton_cycle_simple(Graph* graph);
 IntList* find_hamilton_cycle_with_timeout(Graph* graph, double timeout_sec);
-void hamilton(Graph* graph, int v);
+bool hamiltonian_cycle(Graph *graph, int start_vertex, int **cycle, int *cycle_length);
+SearchState* init_search_state(int vertices, int start_vertex);
+void free_search_state(SearchState *state);
 
 // Timing functions
 double get_time_diff(clock_t start, clock_t end);
