@@ -1,5 +1,41 @@
 #include "graph.h"
 
+#define TIMEOUT_SECONDS 1.0  // 1 second timeout
+#define NUM_RUNS 3           // Multiple runs for averaging
+
+double measure_algorithm_time(Graph* graph, bool is_euler) {
+    double total_time = 0.0;
+    int successful_runs = 0;
+    
+    for (int run = 0; run < NUM_RUNS; run++) {
+        clock_t start = clock();
+        IntList* result = NULL;
+        
+        if (is_euler) {
+            result = find_euler_cycle_simple(graph);
+        } else {
+            result = find_hamilton_cycle_with_timeout(graph, TIMEOUT_SECONDS);
+        }
+        
+        clock_t end = clock();
+        double time_taken = get_time_diff(start, end);
+        
+        if (result != NULL || time_taken >= TIMEOUT_SECONDS) {
+            total_time += time_taken;
+            successful_runs++;
+        }
+        
+        if (result) free_list(result);
+        
+        // Break early if timeout reached
+        if (time_taken >= TIMEOUT_SECONDS) {
+            return TIMEOUT_SECONDS; // Return timeout value
+        }
+    }
+    
+    return successful_runs > 0 ? total_time / successful_runs : TIMEOUT_SECONDS;
+}
+
 int main() {
     printf("=== Task I: Euler and Hamilton Cycle Algorithms ===\n\n");
     
@@ -11,14 +47,14 @@ int main() {
     
     fprintf(results_file, "vertices,euler_sparse_time,hamilton_sparse_time,euler_dense_time,hamilton_dense_time\n");
     
-    printf("Measuring execution times for 15 measurement points...\n");
+    printf("Measuring execution times (%.1fs timeout)...\n", TIMEOUT_SECONDS);
     printf("Vertices\tEuler(30%%)\tHamilton(30%%)\tEuler(70%%)\tHamilton(70%%)\n");
     printf("--------\t----------\t-------------\t----------\t-------------\n");
     
-    // 15 measurement points
-    int vertices_sizes[] = {4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60};
+    // Smaller vertex sizes for more reliable results
+    int vertices_sizes[] = {4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42};
     
-    for (int i = 0; i < 15; i++) {
+    for (int i = 0; i < 20; i++) {
         int n = vertices_sizes[i];
         
         // Generate sparse graph (30% edge density)
@@ -27,46 +63,35 @@ int main() {
         // Generate dense graph (70% edge density)
         Graph* dense_graph = generate_eulerian_hamiltonian_graph(n, 0.7);
         
-        print_graph(sparse_graph);
-        print_graph(dense_graph);
-
-        // Measure Euler cycle time for sparse graph
-        clock_t start = clock();
-        IntList* euler_sparse = find_euler_cycle_simple(sparse_graph);
-        clock_t end = clock();
-        double euler_sparse_time = get_time_diff(start, end);
+        printf("Testing %d vertices... ", n);
+        fflush(stdout);
         
-        // Measure Hamilton cycle time for sparse graph
-        start = clock();
-        IntList* hamilton_sparse = find_hamilton_cycle_simple(sparse_graph);
-        end = clock();
-        double hamilton_sparse_time = get_time_diff(start, end);
-        
-        // Measure Euler cycle time for dense graph
-        start = clock();
-        IntList* euler_dense = find_euler_cycle_simple(dense_graph);
-        end = clock();
-        double euler_dense_time = get_time_diff(start, end);
-        
-        // Measure Hamilton cycle time for dense graph
-        start = clock();
-        IntList* hamilton_dense = find_hamilton_cycle_simple(dense_graph);
-        end = clock();
-        double hamilton_dense_time = get_time_diff(start, end);
+        // Measure times with averaging and timeout protection
+        double euler_sparse_time = measure_algorithm_time(sparse_graph, true);
+        double hamilton_sparse_time = measure_algorithm_time(sparse_graph, false);
+        double euler_dense_time = measure_algorithm_time(dense_graph, true);
+        double hamilton_dense_time = measure_algorithm_time(dense_graph, false);
         
         // Print results
-        printf("%d\t\t%.6f\t%.6f\t\t%.6f\t%.6f\n", 
-               n, euler_sparse_time, hamilton_sparse_time, euler_dense_time, hamilton_dense_time);
+        printf("Done\n");
+        printf("%d\t\t%.6f\t", n, euler_sparse_time);
+        if (hamilton_sparse_time >= TIMEOUT_SECONDS) {
+            printf("TIMEOUT\t\t");
+        } else {
+            printf("%.6f\t\t", hamilton_sparse_time);
+        }
+        printf("%.6f\t", euler_dense_time);
+        if (hamilton_dense_time >= TIMEOUT_SECONDS) {
+            printf("TIMEOUT\n");
+        } else {
+            printf("%.6f\n", hamilton_dense_time);
+        }
         
         // Save to CSV file
         fprintf(results_file, "%d,%.6f,%.6f,%.6f,%.6f\n", 
                 n, euler_sparse_time, hamilton_sparse_time, euler_dense_time, hamilton_dense_time);
         
         // Clean up memory
-        if (euler_sparse) free_list(euler_sparse);
-        if (hamilton_sparse) free_list(hamilton_sparse);
-        if (euler_dense) free_list(euler_dense);
-        if (hamilton_dense) free_list(hamilton_dense);
         free_graph(sparse_graph);
         free_graph(dense_graph);
     }

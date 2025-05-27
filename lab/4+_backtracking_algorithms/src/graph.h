@@ -50,6 +50,7 @@ void euler(Graph* graph, int v, bool **visited_edges);
 
 // Simple Hamilton cycle finder (find_hamilton.c)
 IntList* find_hamilton_cycle_simple(Graph* graph);
+IntList* find_hamilton_cycle_with_timeout(Graph* graph, double timeout_sec);
 void hamilton(Graph* graph, int v);
 
 // Timing functions
