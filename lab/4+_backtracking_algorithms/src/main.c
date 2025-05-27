@@ -1,6 +1,6 @@
 #include "graph.h"
 
-#define TIMEOUT_SECONDS 1.0  // 1 second timeout
+#define TIMEOUT_SECONDS 5.0  // 1 second timeout
 #define NUM_RUNS 3           // Multiple runs for averaging
 
 double measure_algorithm_time(Graph* graph, bool is_euler) {
@@ -18,11 +18,11 @@ double measure_algorithm_time(Graph* graph, bool is_euler) {
             int cycle_length = 0;
             if (hamiltonian_cycle(graph, 0, &cycle, &cycle_length)) {
               // Convert raw array to IntList
-              IntList* cycle_list = create_list(cycle_length);
+              result = create_list(cycle_length);
               for (int i = 0; i < cycle_length; i++) {
-                  cycle_list->items[i] = cycle[i];
+                  result->items[i] = cycle[i];
               }
-              cycle_list->size = cycle_length;
+              result->size = cycle_length;
             }
         }
         
@@ -37,9 +37,9 @@ double measure_algorithm_time(Graph* graph, bool is_euler) {
         if (result) free_list(result);
         
         // Break early if timeout reached
-        // if (time_taken >= TIMEOUT_SECONDS) {
-        //     return TIMEOUT_SECONDS; // Return timeout value
-        // }
+        if (time_taken >= TIMEOUT_SECONDS) {
+            return TIMEOUT_SECONDS; // Return timeout value
+        }
     }
     
     return successful_runs > 0 ? total_time / successful_runs : TIMEOUT_SECONDS;
