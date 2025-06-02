@@ -45,7 +45,7 @@ void print_cycle(IntList *cycle) {
         return;
     }
     for (int i = 0; i < cycle->size; i++) {
-        printf("%d", cycle->items[i] + 1); // Convert to 1-based index
+        printf("%d", cycle->items[i] + 1);
         if (i < cycle->size - 1) printf(" ");
     }
     printf("\n");
@@ -57,7 +57,7 @@ void print_hamilton_cycle(int *cycle, int length) {
         return;
     }
     for (int i = 0; i < length; i++) {
-        printf("%d", cycle[i] + 1); // Convert to 1-based index
+        printf("%d", cycle[i] + 1); 
         if (i < length - 1) printf(" ");
     }
     printf("\n");
