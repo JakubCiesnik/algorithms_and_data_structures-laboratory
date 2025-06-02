@@ -1,6 +1,6 @@
 #include "graph.h"
 
-#define TIMEOUT_SECONDS 5.0  // 1 second timeout
+#define TIMEOUT_SECONDS 3.0  // 1 second timeout
 #define NUM_RUNS 3           // Multiple runs for averaging
 
 double measure_algorithm_time(Graph* graph, bool is_euler) {

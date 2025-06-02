@@ -27,6 +27,12 @@ typedef struct {
     int start_vertex;
 } SearchState;
 
+typedef struct {
+    IntList **paths;
+    int count;
+    int capacity;
+} PathList;
+
 // Graph functions
 Graph* create_graph(int vertices);
 void free_graph(Graph* graph);
@@ -62,6 +68,7 @@ IntList* find_hamilton_cycle_with_timeout(Graph* graph, double timeout_sec);
 bool hamiltonian_cycle(Graph *graph, int start_vertex, int **cycle, int *cycle_length);
 SearchState* init_search_state(int vertices, int start_vertex);
 void free_search_state(SearchState *state);
+PathList* find_all_hamiltonian_paths(Graph *graph, int start_vertex);
 
 // Timing functions
 double get_time_diff(clock_t start, clock_t end);

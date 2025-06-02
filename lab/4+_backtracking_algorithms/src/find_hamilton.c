@@ -77,6 +77,78 @@ bool hamiltonian_cycle(Graph *graph, int start_vertex, int **cycle, int *cycle_l
     return found;
 }
 
+// ex2
+
+PathList* create_pathlist(int capacity) {
+    PathList *pl = malloc(sizeof(PathList));
+    pl->paths = malloc(capacity * sizeof(IntList*));
+    pl->count = 0;
+    pl->capacity = capacity;
+    return pl;
+}
+
+void add_to_pathlist(PathList *pl, IntList *path) {
+    if (pl->count >= pl->capacity) {
+        pl->capacity *= 2;
+        pl->paths = realloc(pl->paths, pl->capacity * sizeof(IntList*));
+    }
+    pl->paths[pl->count++] = path;
+}
+
+// Modified recursive function
+void find_all_paths(Graph *graph, SearchState *state, int v, PathList *results) {
+    state->visited[v] = true;
+    state->used_count++;
+    
+    // Store current node in path
+    state->path[state->path_size++] = v;
+
+    // Check if Hamiltonian path is complete
+    if (state->used_count == graph->vertices) {
+        // Create new IntList and copy path
+        IntList *new_path = create_list(state->path_size);
+        for (int i = 0; i < state->path_size; i++) {
+            new_path->items[i] = state->path[i];
+        }
+        new_path->size = state->path_size;
+        add_to_pathlist(results, new_path);
+    }
+    else {
+        // Continue exploring successors
+        for (int i = next_successor(graph, v, -1); i != -1; i = next_successor(graph, v, i)) {
+            if (!state->visited[i]) {
+                find_all_paths(graph, state, i, results);
+            }
+        }
+    }
+
+    // Backtrack
+    state->visited[v] = false;
+    state->used_count--;
+    state->path_size--;
+}
+
+// Main function to find all Hamiltonian paths
+PathList* find_all_hamiltonian_paths(Graph *graph, int start_vertex) {
+    SearchState *state = init_search_state(graph->vertices, start_vertex);
+    PathList *results = create_pathlist(10);
+
+    // Initialize with start vertex
+    state->path[state->path_size++] = start_vertex;
+    state->visited[start_vertex] = true;
+    state->used_count++;
+
+    // Explore all paths starting from start_vertex
+    for (int i = next_successor(graph, start_vertex, -1); i != -1; i = next_successor(graph, start_vertex, i)) {
+        if (!state->visited[i]) {
+            find_all_paths(graph, state, i, results);
+        }
+    }
+
+    free_search_state(state);
+    return results;
+}
+
 // // Find Hamilton cycle
 // IntList* find_hamilton_cycle_simple(Graph* graph) {
 //     if (graph->vertices < 3) return NULL;
