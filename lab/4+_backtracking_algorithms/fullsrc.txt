@@ -1,0 +1,865 @@
+==> src/find_euler.c <==
+#include "graph.h"
+
+static IntList* C; // lista zawierająca wierzchołki tworzące cykl
+
+// Euler(v) - follows pseudocode exactly
+void euler(Graph* graph, int v, bool **visited_edges) {
+    // dla każdego wierzchołka w takiego, że istnieje nieodwiedzona krawędź z v do w
+    for (int w = 0; w < graph->vertices; w++) {
+        if (graph->adjacency_matrix[v][w] && !visited_edges[v][w]) {
+            // odwiedź krawędź {v, w}
+            visited_edges[v][w] = true;
+            visited_edges[w][v] = true;
+            
+            // Euler(w);
+            euler(graph, w, visited_edges);
+        }
+    }
+    
+    // C.Add(v);
+    add_to_list(C, v);
+}
+
+// Find Euler cycle
+IntList* find_euler_cycle_simple(Graph* graph) {
+    if (!is_eulerian(graph)) return NULL;
+    
+    C = create_list(graph->edges + graph->vertices);
+    
+    bool **visited_edges = (bool**)malloc(graph->vertices * sizeof(bool*));
+    for (int i = 0; i < graph->vertices; i++) {
+        visited_edges[i] = (bool*)calloc(graph->vertices, sizeof(bool));
+    }
+    
+    euler(graph, 0, visited_edges);
+    
+    for (int i = 0; i < graph->vertices; i++) {
+        free(visited_edges[i]);
+    }
+    free(visited_edges);
+    
+    return C;
+}
+
+==> src/find_hamilton.c <==
+#include <stdbool.h>
+#include "graph.h"
+
+SearchState* init_search_state(int vertices, int start_vertex) {
+    SearchState *state = malloc(sizeof(SearchState));
+    state->visited = malloc(vertices * sizeof(bool));
+    state->path = malloc(vertices * sizeof(int));
+    state->path_size = 0;
+    state->used_count = 0;
+    state->start_vertex = start_vertex;
+    
+    for (int i = 0; i < vertices; i++) {
+        state->visited[i] = false;
+    }
+    return state;
+}
+
+void free_search_state(SearchState *state) {
+    free(state->visited);
+    free(state->path);
+    free(state);
+}
+
+int next_successor(const Graph *graph, int v, int current) {
+    for (int i = current + 1; i < graph->vertices; i++) {
+        if (graph->adjacency_matrix[v][i]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+bool find_hamiltonian_path(Graph *graph, SearchState *state, int v) {
+    state->visited[v] = true;
+    state->used_count++;
+    
+    // Try all successors
+    for (int i = next_successor(graph, v, -1); i != -1; i = next_successor(graph, v, i)) {
+        if (i == state->start_vertex) {
+            if (state->used_count == graph->vertices) {
+                state->path[state->path_size++] = v;
+                return true;
+            }
+        }
+        
+        if (!state->visited[i]) {
+            if (find_hamiltonian_path(graph, state, i)) {
+                state->path[state->path_size++] = v;
+                return true;
+            }
+        }
+    }
+    
+    // Backtrack
+    state->visited[v] = false;
+    state->used_count--;
+    return false;
+}
+
+bool hamiltonian_cycle(Graph *graph, int start_vertex, int **cycle, int *cycle_length) {
+    SearchState *state = init_search_state(graph->vertices, start_vertex);
+    bool found = find_hamiltonian_path(graph, state, start_vertex);
+    
+    if (found) {
+        // Complete the cycle by adding start vertex at the end
+        *cycle_length = graph->vertices + 1;
+        *cycle = malloc(*cycle_length * sizeof(int));
+        
+        // Copy the path in reverse order (from recursive calls)
+        for (int i = 0; i < graph->vertices; i++) {
+            (*cycle)[i] = state->path[graph->vertices - 1 - i];
+        }
+        (*cycle)[graph->vertices] = start_vertex;
+    }
+   
+    free_search_state(state);
+    return found;
+}
+
+// ex2
+
+PathList* create_pathlist(int capacity) {
+    PathList *pl = malloc(sizeof(PathList));
+    pl->paths = malloc(capacity * sizeof(IntList*));
+    pl->count = 0;
+    pl->capacity = capacity;
+    return pl;
+}
+
+void add_to_pathlist(PathList *pl, IntList *path) {
+    if (pl->count >= pl->capacity) {
+        pl->capacity *= 2;
+        pl->paths = realloc(pl->paths, pl->capacity * sizeof(IntList*));
+    }
+    pl->paths[pl->count++] = path;
+}
+
+// Modified recursive function
+void find_all_paths(Graph *graph, SearchState *state, int v, PathList *results) {
+    state->visited[v] = true;
+    state->used_count++;
+    
+    // Store current node in path
+    state->path[state->path_size++] = v;
+
+    // Check if Hamiltonian path is complete
+    if (state->used_count == graph->vertices) {
+        // Create new IntList and copy path
+        IntList *new_path = create_list(state->path_size);
+        for (int i = 0; i < state->path_size; i++) {
+            new_path->items[i] = state->path[i];
+        }
+        new_path->size = state->path_size;
+        add_to_pathlist(results, new_path);
+    }
+    else {
+        // Continue exploring successors
+        for (int i = next_successor(graph, v, -1); i != -1; i = next_successor(graph, v, i)) {
+            if (!state->visited[i]) {
+                find_all_paths(graph, state, i, results);
+            }
+        }
+    }
+
+    // Backtrack
+    state->visited[v] = false;
+    state->used_count--;
+    state->path_size--;
+}
+
+// Main function to find all Hamiltonian paths
+PathList* find_all_hamiltonian_paths(Graph *graph, int start_vertex) {
+    SearchState *state = init_search_state(graph->vertices, start_vertex);
+    PathList *results = create_pathlist(10);
+
+    // Initialize with start vertex
+    state->path[state->path_size++] = start_vertex;
+    state->visited[start_vertex] = true;
+    state->used_count++;
+
+    // Explore all paths starting from start_vertex
+    for (int i = next_successor(graph, start_vertex, -1); i != -1; i = next_successor(graph, start_vertex, i)) {
+        if (!state->visited[i]) {
+            find_all_paths(graph, state, i, results);
+        }
+    }
+
+    free_search_state(state);
+    return results;
+}
+
+// // Find Hamilton cycle
+// IntList* find_hamilton_cycle_simple(Graph* graph) {
+//     if (graph->vertices < 3) return NULL;
+//     
+//     V = create_list(graph->vertices + 1);
+//     cycle_found = false;
+//     start_vertex = 0;
+//     start_time = clock();
+//     timeout_seconds = 2.0; // 2 second timeout
+//     
+//     hamilton(graph, start_vertex);
+//     
+//     if (cycle_found) {
+//         IntList* result = create_list(V->size);
+//         for (int i = 0; i < V->size; i++) {
+//             add_to_list(result, V->items[i]);
+//         }
+//         free_list(V);
+//         return result;
+//     }
+//     
+//     free_list(V);
+//     return NULL;
+// }
+//
+// // Find Hamilton cycle with configurable timeout
+// IntList* find_hamilton_cycle_with_timeout(Graph* graph, double timeout_sec) {
+//     if (graph->vertices < 3) return NULL;
+//     
+//     V = create_list(graph->vertices + 1);
+//     cycle_found = false;
+//     start_vertex = 0;
+//     start_time = clock();
+//     timeout_seconds = timeout_sec;
+//     
+//     hamilton(graph, start_vertex);
+//     
+//     if (cycle_found) {
+//         IntList* result = create_list(V->size);
+//         for (int i = 0; i < V->size; i++) {
+//             add_to_list(result, V->items[i]);
+//         }
+//         free_list(V);
+//         return result;
+//     }
+//     
+//     free_list(V);
+//     return NULL;
+// }
+// static IntList* V; // lista zawierająca odwiedzone wierzchołki
+// static int start_vertex;
+// static bool cycle_found;
+// static clock_t start_time;
+// static double timeout_seconds;
+//
+// // Hamilton(v) - follows pseudocode exactly
+// void hamilton(Graph* graph, int v) {
+//     if (cycle_found) return;
+//     
+//     // Check for timeout
+//     clock_t current_time = clock();
+//     double elapsed = get_time_diff(start_time, current_time);
+//     if (elapsed >= timeout_seconds) {
+//         return; // Exit due to timeout
+//     }
+//     
+//     // V.Add(v);
+//     add_to_list(V, v);
+//     
+//     // dla każdego nieodwiedzonego sąsiada w wierzchołka v
+//     for (int w = 0; w < graph->vertices; w++) {
+//         if (graph->adjacency_matrix[v][w] && !contains(V, w)) {
+//             // Hamilton(w);
+//             hamilton(graph, w);
+//         }
+//     }
+//     
+//     // if V zawiera wszystkie wierzchołki grafu i istnieje krawędź z v do źródła
+//     if (V->size == graph->vertices && has_edge(graph, v, start_vertex)) {
+//         // cykl znaleziony
+//         cycle_found = true;
+//         add_to_list(V, start_vertex); // Complete the cycle
+//         return;
+//     }
+//     
+//     // else V.Remove(v);
+//     if (!cycle_found) {
+//         remove_from_list(V, v);
+//     }
+// }
+
+==> src/graph.c <==
+#include <stdbool.h>
+#include "graph.h"
+
+// Graph functions
+Graph* create_graph(int vertices) {
+    Graph* graph = (Graph*)malloc(sizeof(Graph));
+    graph->vertices = vertices;
+    graph->edges = 0;
+    
+    // Allocate adjacency matrix
+    graph->adjacency_matrix = (bool**)malloc(vertices * sizeof(bool*));
+    for (int i = 0; i < vertices; i++) {
+        graph->adjacency_matrix[i] = (bool*)calloc(vertices, sizeof(bool));
+    }
+    
+    return graph;
+}
+
+void free_graph(Graph* graph) {
+    if (graph) {
+        for (int i = 0; i < graph->vertices; i++) {
+            free(graph->adjacency_matrix[i]);
+        }
+        free(graph->adjacency_matrix);
+        free(graph);
+    }
+}
+
+void add_edge(Graph* graph, int u, int v) {
+    if (u < graph->vertices && v < graph->vertices && u != v) {
+        if (!graph->adjacency_matrix[u][v]) {
+            graph->adjacency_matrix[u][v] = 1;
+            graph->adjacency_matrix[v][u] = 1; // Undirected graph
+            graph->edges++;
+        }
+    }
+}
+
+bool has_edge(Graph* graph, int u, int v) {
+    if (u < graph->vertices && v < graph->vertices) {
+        return graph->adjacency_matrix[u][v] == 1;
+    }
+    return false;
+}
+
+void print_graph(Graph* graph) {
+    printf("Graph with %d vertices and %d edges:\n", graph->vertices, graph->edges);
+    printf("Adjacency Matrix:\n");
+    for (int i = 0; i < graph->vertices; i++) {
+        for (int j = 0; j < graph->vertices; j++) {
+            printf("%d ", graph->adjacency_matrix[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+// DFS for connectivity check
+void dfs_connectivity(Graph* graph, int v, bool* visited) {
+    visited[v] = true;
+    for (int i = 0; i < graph->vertices; i++) {
+        if (graph->adjacency_matrix[v][i] && !visited[i]) {
+            dfs_connectivity(graph, i, visited);
+        }
+    }
+}
+
+bool is_connected(Graph* graph) {
+    bool* visited = (bool*)calloc(graph->vertices, sizeof(bool));
+    
+    // Find first vertex with non-zero degree
+    int start = -1;
+    for (int i = 0; i < graph->vertices; i++) {
+        int degree = 0;
+        for (int j = 0; j < graph->vertices; j++) {
+            degree += graph->adjacency_matrix[i][j];
+        }
+        if (degree > 0) {
+            start = i;
+            break;
+        }
+    }
+    
+    if (start == -1) {
+        free(visited);
+        return false; // No edges
+    }
+    
+    dfs_connectivity(graph, start, visited);
+    
+    // Check if all vertices with edges are visited
+    for (int i = 0; i < graph->vertices; i++) {
+        int degree = 0;
+        for (int j = 0; j < graph->vertices; j++) {
+            degree += graph->adjacency_matrix[i][j];
+        }
+        if (degree > 0 && !visited[i]) {
+            free(visited);
+            return false;
+        }
+    }
+    
+    free(visited);
+    return true;
+}
+
+bool is_eulerian(Graph* graph) {
+    if (!is_connected(graph)) return false;
+    
+    // Check if all vertices have even degree
+    for (int i = 0; i < graph->vertices; i++) {
+        int degree = 0;
+        for (int j = 0; j < graph->vertices; j++) {
+            degree += graph->adjacency_matrix[i][j];
+        }
+        if (degree % 2 != 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// List functions
+IntList* create_list(int capacity) {
+    IntList* list = (IntList*)malloc(sizeof(IntList));
+    list->items = (int*)malloc(capacity * sizeof(int));
+    list->size = 0;
+    list->capacity = capacity;
+    return list;
+}
+
+void free_list(IntList* list) {
+    if (list) {
+        free(list->items);
+        free(list);
+    }
+}
+
+void add_to_list(IntList* list, int item) {
+    if (list->size < list->capacity) {
+        list->items[list->size] = item;
+        list->size++;
+    }
+}
+
+void remove_from_list(IntList* list, int item) {
+    for (int i = 0; i < list->size; i++) {
+        if (list->items[i] == item) {
+            for (int j = i; j < list->size - 1; j++) {
+                list->items[j] = list->items[j + 1];
+            }
+            list->size--;
+            break;
+        }
+    }
+}
+
+bool contains(IntList* list, int item) {
+    for (int i = 0; i < list->size; i++) {
+        if (list->items[i] == item) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void print_list(IntList* list) {
+    printf("[");
+    for (int i = 0; i < list->size; i++) {
+        printf("%d", list->items[i]);
+        if (i < list->size - 1) printf(", ");
+    }
+    printf("]\n");
+}
+
+double get_time_diff(clock_t start, clock_t end) {
+    return ((double)(end - start)) / CLOCKS_PER_SEC;
+}
+
+==> src/graph.h <==
+#ifndef GRAPH_H
+#define GRAPH_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <time.h>
+#include <string.h>
+
+typedef struct {
+    bool **adjacency_matrix;
+    int vertices;
+    int edges;
+} Graph;
+
+typedef struct {
+    int *items;
+    int size;
+    int capacity;
+} IntList;
+
+typedef struct {
+    bool *visited;
+    int *path;
+    int path_size;
+    int used_count;
+    int start_vertex;
+} SearchState;
+
+typedef struct {
+    IntList **paths;
+    int count;
+    int capacity;
+} PathList;
+
+// Graph functions
+Graph* create_graph(int vertices);
+void free_graph(Graph* graph);
+void add_edge(Graph* graph, int u, int v);
+bool has_edge(Graph* graph, int u, int v);
+void print_graph(Graph* graph);
+bool is_connected(Graph* graph);
+bool is_eulerian(Graph* graph);
+
+// Graph generation functions
+Graph* generate_eulerian_hamiltonian_graph(int vertices, double edge_density);
+void make_hamiltonian_cycle(Graph* graph);
+void add_triangles_for_density(Graph* graph, double edge_density);
+bool try_add_triangle(Graph* graph, int v1, int v2, int v3);
+void swap_vertices(Graph* graph, int v1, int v2);
+void randomize_vertex_ordering(Graph* graph);
+
+// List functions
+IntList* create_list(int capacity);
+void free_list(IntList* list);
+void add_to_list(IntList* list, int item);
+void remove_from_list(IntList* list, int item);
+bool contains(IntList* list, int item);
+void print_list(IntList* list);
+
+// Simple Euler cycle finder (find_euler.c)
+IntList* find_euler_cycle_simple(Graph* graph);
+void euler(Graph* graph, int v, bool **visited_edges);
+
+// Simple Hamilton cycle finder (find_hamilton.c)
+IntList* find_hamilton_cycle_simple(Graph* graph);
+IntList* find_hamilton_cycle_with_timeout(Graph* graph, double timeout_sec);
+bool hamiltonian_cycle(Graph *graph, int start_vertex, int **cycle, int *cycle_length);
+SearchState* init_search_state(int vertices, int start_vertex);
+void free_search_state(SearchState *state);
+PathList* find_all_hamiltonian_paths(Graph *graph, int start_vertex);
+
+// Timing functions
+double get_time_diff(clock_t start, clock_t end);
+
+#endif
+
+==> src/graph_generator.c <==
+#include "graph.h"
+
+// Generate Eulerian + Hamiltonian graph
+Graph* generate_eulerian_hamiltonian_graph(int vertices, double edge_density) {
+    Graph* graph = create_graph(vertices);
+    srand(time(NULL) + vertices);
+    
+    // 1. Create Hamilton cycle
+    make_hamiltonian_cycle(graph);
+    
+    // print_graph(graph); // DEBUG
+
+    // 2. Add triangles for density (euler)
+    add_triangles_for_density(graph, edge_density);
+    
+    // print_graph(graph); // DEBUG
+
+    // 3. Randomize to hide obvious cycle (make hamilton not too fast)
+    randomize_vertex_ordering(graph);
+    
+    // print_graph(graph); // DEBUG
+
+    return graph;
+}
+
+// Create basic Hamilton cycle: 0->1->2->...->n-1->0
+void make_hamiltonian_cycle(Graph* graph) {
+    for (int i = 0; i < graph->vertices; i++) {
+        int next = (i + 1) % graph->vertices;
+        add_edge(graph, i, next);
+    }
+}
+
+// Add triangles to increase density while keeping Eulerian property
+void add_triangles_for_density(Graph* graph, double edge_density) {
+    int max_edges = (graph->vertices * (graph->vertices - 1)) / 2;
+    int target_edges = (int)(max_edges * edge_density);
+    
+    if (graph->edges >= target_edges) return;
+    
+    int attempts = 0;
+    int max_attempts = graph->vertices * graph->vertices;
+    
+    // Add complete triangles (3 new edges at once)
+    while (graph->edges + 3 <= target_edges && attempts < max_attempts) {
+        int v1 = rand() % graph->vertices;
+        int v2 = rand() % graph->vertices;
+        int v3 = rand() % graph->vertices;
+        
+        if (v1 != v2 && v2 != v3 && v1 != v3) {
+            if (try_add_triangle(graph, v1, v2, v3)) {
+                continue;
+            }
+        }
+        attempts++;
+    }
+}
+
+bool try_add_triangle(Graph* graph, int v1, int v2, int v3) {
+    // Check if all three edges of the triangle don't exist yet
+    bool edge1_new = !has_edge(graph, v1, v2);
+    bool edge2_new = !has_edge(graph, v2, v3);
+    bool edge3_new = !has_edge(graph, v3, v1);
+    
+    // We need all three edges to be new to form a proper triangle
+    if (edge1_new && edge2_new && edge3_new) {
+        add_edge(graph, v1, v2);
+        add_edge(graph, v2, v3);
+        add_edge(graph, v3, v1);
+        return true;
+    }
+    
+    return false;
+}
+
+// Swap two vertices in adjacency matrix
+void swap_vertices(Graph* graph, int v1, int v2) {
+    if (v1 == v2 || v1 >= graph->vertices || v2 >= graph->vertices) {
+        return;
+    }
+    
+    // Swap rows
+    bool* temp_row = graph->adjacency_matrix[v1];
+    graph->adjacency_matrix[v1] = graph->adjacency_matrix[v2];
+    graph->adjacency_matrix[v2] = temp_row;
+    
+    // Swap columns
+    for (int i = 0; i < graph->vertices; i++) {
+        int temp = graph->adjacency_matrix[i][v1];
+        graph->adjacency_matrix[i][v1] = graph->adjacency_matrix[i][v2];
+        graph->adjacency_matrix[i][v2] = temp;
+    }
+}
+
+// Randomize vertex ordering to hide obvious Hamilton cycle
+void randomize_vertex_ordering(Graph* graph) {
+    int num_swaps = graph->vertices * 2;
+    
+    for (int i = 0; i < num_swaps; i++) {
+        int v1 = rand() % graph->vertices;
+        int v2 = rand() % graph->vertices;
+        
+        if (v1 != v2) {
+            swap_vertices(graph, v1, v2);
+        }
+    }
+}
+
+==> src/main1.c <==
+#include "graph.h"
+
+#define TIMEOUT_SECONDS 3.0  // 1 second timeout
+#define NUM_RUNS 3           // Multiple runs for averaging
+
+double measure_algorithm_time(Graph* graph, bool is_euler) {
+    double total_time = 0.0;
+    int successful_runs = 0;
+    
+    for (int run = 0; run < NUM_RUNS; run++) {
+        clock_t start = clock();
+        IntList* result = NULL;
+        if (is_euler) {
+            result = find_euler_cycle_simple(graph);
+        } else {
+            // result = find_hamilton_cycle_with_timeout(graph, TIMEOUT_SECONDS);
+            int *cycle = NULL;
+            int cycle_length = 0;
+            if (hamiltonian_cycle(graph, 0, &cycle, &cycle_length)) {
+              // Convert raw array to IntList
+              result = create_list(cycle_length);
+              for (int i = 0; i < cycle_length; i++) {
+                  result->items[i] = cycle[i];
+              }
+              result->size = cycle_length;
+            }
+        }
+        
+        clock_t end = clock();
+        double time_taken = get_time_diff(start, end);
+        
+        if (result != NULL || time_taken >= TIMEOUT_SECONDS) {
+            total_time += time_taken;
+            successful_runs++;
+        }
+        
+        if (result) free_list(result);
+        
+        // Break early if timeout reached
+        if (time_taken >= TIMEOUT_SECONDS) {
+            return TIMEOUT_SECONDS; // Return timeout value
+        }
+    }
+    
+    return successful_runs > 0 ? total_time / successful_runs : TIMEOUT_SECONDS;
+}
+
+int main() {
+    printf("=== Task I: Euler and Hamilton Cycle Algorithms ===\n\n");
+    
+    FILE *results_file = fopen("results/task1_results.csv", "w");
+    if (!results_file) {
+        printf("Error: Could not create results file\n");
+        return 1;
+    }
+    
+    fprintf(results_file, "vertices,euler_sparse_time,hamilton_sparse_time,euler_dense_time,hamilton_dense_time\n");
+    
+    printf("Measuring execution times (%.1fs timeout)...\n", TIMEOUT_SECONDS);
+    printf("Vertices\tEuler(30%%)\tHamilton(30%%)\tEuler(70%%)\tHamilton(70%%)\n");
+    printf("--------\t----------\t-------------\t----------\t-------------\n");
+    
+    // Smaller vertex sizes for more reliable results
+    int vertices_sizes[] = {4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40, 42};
+    
+    for (int i = 0; i < 20; i++) {
+        int n = vertices_sizes[i];
+        
+        // Generate sparse graph (30% edge density)
+        Graph* sparse_graph = generate_eulerian_hamiltonian_graph(n, 0.3);
+        
+        // Generate dense graph (70% edge density)
+        Graph* dense_graph = generate_eulerian_hamiltonian_graph(n, 0.7);
+        
+        printf("Testing %d vertices... ", n);
+        fflush(stdout);
+        
+        // Measure times with averaging and timeout protection
+        double euler_sparse_time = measure_algorithm_time(sparse_graph, true);
+        double hamilton_sparse_time = measure_algorithm_time(sparse_graph, false);
+        double euler_dense_time = measure_algorithm_time(dense_graph, true);
+        double hamilton_dense_time = measure_algorithm_time(dense_graph, false);
+        
+        // Print results
+        printf("Done\n");
+        printf("%d\t\t%.6f\t", n, euler_sparse_time);
+        if (hamilton_sparse_time >= TIMEOUT_SECONDS) {
+            printf("TIMEOUT\t\t");
+        } else {
+            printf("%.6f\t\t", hamilton_sparse_time);
+        }
+        printf("%.6f\t", euler_dense_time);
+        if (hamilton_dense_time >= TIMEOUT_SECONDS) {
+            printf("TIMEOUT\n");
+        } else {
+            printf("%.6f\n", hamilton_dense_time);
+        }
+        
+        // Save to CSV file
+        fprintf(results_file, "%d,%.6f,%.6f,%.6f,%.6f\n", 
+                n, euler_sparse_time, hamilton_sparse_time, euler_dense_time, hamilton_dense_time);
+        
+        // Clean up memory
+        free_graph(sparse_graph);
+        free_graph(dense_graph);
+    }
+    
+    fclose(results_file);
+    printf("\nResults saved to results/task1_results.csv\n");
+    
+    return 0;
+}
+
+==> src/main2.c <==
+// task2_benchmark.c
+#include "graph.h"
+#include <time.h>
+
+#define TIMEOUT_SECONDS 300.0  // 5 minutes timeout for path enumeration
+#define NUM_RUNS 3
+
+double measure_paths_time(Graph* graph) {
+    double total_time = 0.0;
+    int successful_runs = 0;
+    
+    for (int run = 0; run < NUM_RUNS; run++) {
+        clock_t start = clock();
+        PathList* results = find_all_hamiltonian_paths(graph, 0);
+        clock_t end = clock();
+        
+        double time_taken = get_time_diff(start, end);
+        
+        if (results != NULL) {
+            total_time += time_taken;
+            successful_runs++;
+            
+            // Cleanup paths
+            for (int i = 0; i < results->count; i++) {
+                free_list(results->paths[i]);
+            }
+            free(results->paths);
+            free(results);
+        }
+        
+        if (time_taken >= TIMEOUT_SECONDS) {
+            return TIMEOUT_SECONDS;
+        }
+    }
+    
+    return successful_runs > 0 ? total_time / successful_runs : TIMEOUT_SECONDS;
+}
+
+int main() {
+    printf("=== Task II: Hamiltonian Paths Benchmark ===\n\n");
+    
+    FILE *results_file = fopen("results/task2_results.csv", "w");
+    if (!results_file) {
+        printf("Error: Could not create results file\n");
+        return 1;
+    }
+    
+    fprintf(results_file, "vertices,density,time_taken,num_paths,time_per_path\n");
+    
+    printf("Measuring execution times (%.1fs timeout)...\n", TIMEOUT_SECONDS);
+    printf("Vertices\tDensity\tTime (s)\tPaths Found\tTime/Path (ms)\n");
+    printf("--------\t------\t--------\t-----------\t-------------\n");
+    
+    int vertices_sizes[] = {4, 6, 8, 10, 12, 14, 16};  // Smaller sizes for paths
+   
+    int num_sizes = sizeof(vertices_sizes)/sizeof(vertices_sizes[0]);
+    for (int i = 0; i < num_sizes; i++) {      int n = vertices_sizes[i];
+        
+        for (float density = 0.3; density <= 0.7; density += 0.2) {
+            Graph* graph = generate_eulerian_hamiltonian_graph(n, density);
+            printf("Testing %d vertices (%.0f%%)... ", n, density*100);
+            fflush(stdout);
+            
+            clock_t start = clock();
+            PathList* results = find_all_hamiltonian_paths(graph, 0);
+            double time_taken = get_time_diff(start, clock());
+            int num_paths = results ? results->count : 0;
+            
+            // Print results
+            printf("%.3fs\t%d\t\t%.3f\n", 
+                  time_taken, 
+                  num_paths,
+                  num_paths > 0 ? (time_taken*1000)/num_paths : 0);
+            
+            // Save to CSV
+            fprintf(results_file, "%d,%.2f,%.6f,%d,%.6f\n",
+                    n, density, time_taken, num_paths,
+                    num_paths > 0 ? (time_taken*1000)/num_paths : 0);
+            
+            // Cleanup
+            if (results) {
+                for (int p = 0; p < results->count; p++) {
+                    free_list(results->paths[p]);
+                }
+                free(results->paths);
+                free(results);
+            }
+            free_graph(graph);
+        }
+    }
+    
+    fclose(results_file);
+    printf("\nResults saved to results/task2_results.csv\n");
+    return 0;
+}
+
+==> src/main_code_review.c <==
