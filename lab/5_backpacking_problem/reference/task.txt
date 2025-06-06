@@ -1,0 +1,48 @@
+https://www.cs.put.poznan.pl/mmachowiak/aisd.php?opcja=zadanie_5
+
+Zadanie 5. Problem plecakowy
+
+Termin oddania: 9.06.2025r.
+
+Przebieg ćwiczenia:
+
+1. W porcie stoi statek o ładowności b ton gotowy do załadunku. Statek można załadować różnymi kontenerami, których liczba jest równa n. Kontener i-ty posiada swój ciężar a(i) oraz wartość c(i).
+Podaj optymalny załadunek na statek, tzn. które kontenery zostaną załadowane, w taki sposób, aby wartość ładunku była maksymalna.
+
+2. Problem ten rozwiąż za pomocą algorytmu programowania dynamicznego.
+Efektywność uzyskanego rozwiązania porównaj z algorytmem zachłannym, mierząc:
+
+i) czas uzyskania rozwiązania dla obu metod, dla tych samych instancji problemu.
+ii) jakość rozwiazań generowanych przez algorytm zachłanny (należy tego dokonać obliczając błąd względny dla każdej z instancji wg wzoru (D_dyn - D_zach) / D_dyn).
+
+Podaj wykresy porównawcze dla obu metod przy:
+
+a) stałej ładowności statku, zmiennej liczbie kontenerów,
+b) zmiennej ładowności, liczba kontenerów pozostaje stała.
+
+3. Sformułuj wnioski dotyczące efektywności zastosowanych metod oraz ich złożoności obliczeniowej. Podaj przynależność badanego problemu do określonej klasy problemów ze względu na ich złożoność obliczeniową.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% required knowledge %%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+5. Programowanie dynamiczne
+Znajomość:
+- metody programowania dynamicznego oraz zakresu jej stosowalności, możliwej złożoności obliczeniowej,
+- sformułowania problemu plecakowego i metod jego rozwiązania,
+- algorytmu zachłannego dla problemu plecakowego.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%% report info %%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Wymagania i zalecenia
+
+Na początek kilka ogólnych zaleceń dotyczących sprawozdań:
+1. Sprawozdania powinny być wysłane w formacie PDF!
+2. Nie produkujemy strony tytułowej, wystarczą dane osobowe, numery indeksów i tytuł zdania.
+3. Nie umieszczamy opisu ćwiczenia oraz kodu programu !
+4. Najważniejsze są wykresy (odpowiedni dobór parametrów -
+punktów pomiarowych, czytelność) oraz wnioski, szczególnie,
+dotyczące złożoności obliczeniowej badanych problemów.
+WNIOSKI nie opisują tego co wyszło lecz wyjaśnieją DLACZEGO tak wyszło!
