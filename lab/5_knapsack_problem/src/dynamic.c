@@ -60,16 +60,10 @@ void dynamic(cargo_problem cargo){
     
 }
 
-void print_matrix(int** matrix){
-
-    int rows = sizeof(matrix);
-    int cols;
+void print_matrix(int** matrix, int rows, int cols){
     for (int i = 0; i < rows; i++)
-        cols += sizeof(matrix[i]);
-
-    for (int i = 0; i < rows + 1; i++)
     {
-        for (int j = 0; j < cols + 1; j++)
+        for (int j = 0; j < cols; j++)
         {
             printf("%i ", matrix[i][j]);
         }

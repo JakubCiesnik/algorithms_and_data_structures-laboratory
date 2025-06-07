@@ -27,7 +27,7 @@ int main(){
         matrix[i] = calloc(cols, sizeof(int));
     }
 
-    print_matrix(matrix);
+    print_matrix(matrix, rows, cols);
 
     return 0;
 }

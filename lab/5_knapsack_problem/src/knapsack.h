@@ -15,6 +15,6 @@ void write_file(const char* filename, cargo_problem *problem);
 void print_input(cargo_problem *problem);
 void print_output(cargo_problem *problem);
 void dynamic(cargo_problem cargo);
-void print_matrix(int** matrix);
+void print_matrix(int** matrix, int rows, int cols);
 
 #endif
