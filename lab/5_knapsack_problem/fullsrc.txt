@@ -1,0 +1,319 @@
+==> src/dataset_generator.c <==
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/stat.h>
+#define SET1DIR "dataset/var_container_count/"
+#define SET2DIR "dataset/var_capacity/"
+#define SEED 1
+
+int main() {
+    srand(SEED);
+
+    // Create directories if they don't exist
+    mkdir(SET1DIR, 0777);
+    mkdir(SET2DIR, 0777);
+
+    // Set 1: Capacity constant (100), container count iterated (10 to 150 in steps of 10)
+    for (int i = 0; i < 15; i++) {
+        int container_count = 10 + i * 10;
+        int capacity = 100;
+        char filename[100];
+        sprintf(filename, SET1DIR "problem_%d.csv", i);
+        
+        FILE *file = fopen(filename, "w");
+        if (file == NULL) {
+            perror("Error opening file");
+            continue;
+        }
+        
+        fprintf(file, "%d,%d\n", container_count, capacity);
+        for (int j = 0; j < container_count; j++) {
+            int value = rand() % 31 + 1;
+            int weight = rand() % 31 + 1;
+            fprintf(file, "%d,%d\n", value, weight);
+        }
+        fclose(file);
+    }
+
+    // Set 2: Container count constant (100), capacity iterated (10 to 150 in steps of 10)
+    for (int i = 0; i < 15; i++) {
+        int container_count = 100;
+        int capacity = 10 + i * 10;
+        char filename[100];
+        sprintf(filename, SET2DIR "problem_%d.csv", i);
+        
+        FILE *file = fopen(filename, "w");
+        if (file == NULL) {
+            perror("Error opening file");
+            continue;
+        }
+        
+        fprintf(file, "%d,%d\n", container_count, capacity);
+        for (int j = 0; j < container_count; j++) {
+            int value = rand() % 31 + 1;
+            int weight = rand() % 31 + 1;
+            fprintf(file, "%d,%d\n", value, weight);
+        }
+        fclose(file);
+    }
+
+    return 0;
+}
+
+==> src/io_util.c <==
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "knapsack.h"
+
+void read_file(const char* filename, struct cargo_problem *cargo) {
+    FILE* fp = fopen(filename, "r");
+    if (fp == NULL) {
+        perror("fopen");
+        exit(1);
+    }
+
+    char line[256];
+    if (fgets(line, sizeof(line), fp) == NULL) {
+        fprintf(stderr, "File is empty\n");
+        fclose(fp);
+        exit(1);
+    }
+
+    int container_count, capacity;
+    if (sscanf(line, "%d,%d", &container_count, &capacity) != 2) {
+        fprintf(stderr, "Invalid first line format: %s", line);
+        fclose(fp);
+        exit(1);
+    }
+
+    int n_items = 0;
+    while (fgets(line, sizeof(line), fp) != NULL) {
+        if (line[0] != '\n') {
+            n_items++;
+        }
+    }
+
+    rewind(fp);
+    fgets(line, sizeof(line), fp);
+
+    cargo->in_cargo = (int**)malloc((n_items + 1) * sizeof(int*));
+    if (cargo->in_cargo == NULL) {
+        perror("malloc");
+        fclose(fp);
+        exit(1);
+    }
+
+    for (int i = 0; i < n_items; i++) {
+        if (fgets(line, sizeof(line), fp) == NULL) {
+            break;
+        }
+        if (line[0] == '\n') {
+            i--;
+            continue;
+        }
+        int value, weight;
+        if (sscanf(line, "%d,%d", &value, &weight) != 2) {
+            fprintf(stderr, "Invalid item format at line: %s", line);
+            for (int j = 0; j < i; j++) {
+                free(cargo->in_cargo[j]);
+            }
+            free(cargo->in_cargo);
+            fclose(fp);
+            exit(1);
+        }
+        cargo->in_cargo[i] = (int*)malloc(2 * sizeof(int));
+        if (cargo->in_cargo[i] == NULL) {
+            perror("malloc");
+            for (int j = 0; j < i; j++) {
+                free(cargo->in_cargo[j]);
+            }
+            free(cargo->in_cargo);
+            fclose(fp);
+            exit(1);
+        }
+        cargo->in_cargo[i][0] = value;
+        cargo->in_cargo[i][1] = weight;
+    }
+    cargo->in_cargo[n_items] = NULL;
+
+    cargo->container_count = container_count;
+    cargo->capacity = capacity;
+    cargo->out_cargo = NULL;
+    cargo->value = 0;
+
+    fclose(fp);
+}
+
+void write_file(const char* filename, struct cargo_problem *cargo) {
+    FILE* fp = fopen(filename, "w");
+    if (fp == NULL) {
+        perror("fopen");
+        exit(1);
+    }
+
+    fprintf(fp, "%d\n", cargo->value);
+
+    int n_items = 0;
+    if (cargo->in_cargo != NULL) {
+        while (cargo->in_cargo[n_items] != NULL) {
+            n_items++;
+        }
+    }
+
+    if (cargo->out_cargo != NULL) {
+        for (int i = 0; i < cargo->container_count; i++) {
+            int first = 1;
+            for (int j = 0; j < n_items; j++) {
+                if (cargo->out_cargo[i][j]) {
+                    if (first) {
+                        first = 0;
+                    } else {
+                        fprintf(fp, ",");
+                    }
+                    fprintf(fp, "%d", j);
+                }
+            }
+            fprintf(fp, "\n");
+        }
+    } else {
+        for (int i = 0; i < cargo->container_count; i++) {
+            fprintf(fp, "\n");
+        }
+    }
+
+    fclose(fp);
+}
+
+void print(struct cargo_problem *cargo) {
+    printf("Problem:\n");
+    printf("  Container count: %d\n", cargo->container_count);
+    printf("  Capacity per container: %d\n", cargo->capacity);
+
+    int n_items = 0;
+    if (cargo->in_cargo != NULL) {
+        while (cargo->in_cargo[n_items] != NULL) {
+            n_items++;
+        }
+    }
+    printf("  Item count: %d\n", n_items);
+    for (int i = 0; i < n_items; i++) {
+        printf("    Item %d: value = %d, weight = %d\n", i, cargo->in_cargo[i][0], cargo->in_cargo[i][1]);
+    }
+
+    if (cargo->out_cargo != NULL) {
+        printf("Solution:\n");
+        printf("  Total value: %d\n", cargo->value);
+        for (int i = 0; i < cargo->container_count; i++) {
+            printf("  Container %d: ", i);
+            int first = 1;
+            for (int j = 0; j < n_items; j++) {
+                if (cargo->out_cargo[i][j]) {
+                    if (first) {
+                        first = 0;
+                    } else {
+                        printf(", ");
+                    }
+                    printf("%d", j);
+                }
+            }
+            printf("\n");
+        }
+    }
+}
+
+==> src/knapsack.h <==
+struct cargo_problem {
+  int** in_cargo;
+  int container_count;
+  int capacity;
+  int** out_cargo;
+  int value;
+};
+
+void read_file(const char* filename, struct cargo_problem *cargo);
+void write_file(const char* filename, struct cargo_problem *cargo);
+void print(struct cargo_problem *cargo);
+
+==> src/main.c <==
+#include <stdio.h>
+#include <stdlib.h>
+#include "knapsack.h"
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
+        return 1;
+    }
+
+    struct cargo_problem problem;
+    read_file(argv[1], &problem);
+
+    printf("After reading the problem:\n");
+    print(&problem);
+
+    int n_items = 0;
+    while (problem.in_cargo[n_items] != NULL) {
+        n_items++;
+    }
+
+    problem.out_cargo = (int **)malloc(problem.container_count * sizeof(int *));
+    for (int i = 0; i < problem.container_count; i++) {
+        problem.out_cargo[i] = (int *)calloc(n_items, sizeof(int));
+    }
+
+    int *assigned = (int *)calloc(n_items, sizeof(int));
+    double *densities = (double *)malloc(n_items * sizeof(double));
+    int *index = (int *)malloc(n_items * sizeof(int));
+
+    for (int i = 0; i < n_items; i++) {
+        densities[i] = (double)problem.in_cargo[i][0] / problem.in_cargo[i][1];
+        index[i] = i;
+    }
+
+    for (int i = 0; i < n_items; i++) {
+        for (int j = i + 1; j < n_items; j++) {
+            if (densities[index[i]] < densities[index[j]]) {
+                int temp = index[i];
+                index[i] = index[j];
+                index[j] = temp;
+            }
+        }
+    }
+
+    problem.value = 0;
+    for (int i = 0; i < problem.container_count; i++) {
+        int current_capacity = problem.capacity;
+        for (int j = 0; j < n_items; j++) {
+            int item_idx = index[j];
+            if (!assigned[item_idx] && problem.in_cargo[item_idx][1] <= current_capacity) {
+                problem.out_cargo[i][item_idx] = 1;
+                assigned[item_idx] = 1;
+                current_capacity -= problem.in_cargo[item_idx][1];
+                problem.value += problem.in_cargo[item_idx][0];
+            }
+        }
+    }
+
+    printf("\nAfter solving:\n");
+    print(&problem);
+
+    write_file(argv[2], &problem);
+
+    for (int i = 0; i < problem.container_count; i++) {
+        free(problem.out_cargo[i]);
+    }
+    free(problem.out_cargo);
+
+    for (int i = 0; i < n_items; i++) {
+        free(problem.in_cargo[i]);
+    }
+    free(problem.in_cargo);
+
+    free(assigned);
+    free(densities);
+    free(index);
+
+    return 0;
+}
