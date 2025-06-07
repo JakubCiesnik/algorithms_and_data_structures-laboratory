@@ -15,12 +15,13 @@ int main(int argc, char *argv[]) {
 
 
     write_file(argv[2], &problem);
+      if (problem.out_cargo != NULL) {
+      for (int i = 0; i < problem.container_count; i++) {
+          free(problem.out_cargo[i]);
+      }
 
-    for (int i = 0; i < problem.container_count; i++) {
-        free(problem.out_cargo[i]);
+      free(problem.out_cargo);
     }
-    
-    free(problem.out_cargo);
     free(problem.in_cargo);
 
 
