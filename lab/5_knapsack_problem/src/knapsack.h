@@ -14,7 +14,8 @@ void read_file(const char* filename, cargo_problem *problem);
 void write_file(const char* filename, cargo_problem *problem);
 void print_input(cargo_problem *problem);
 void print_output(cargo_problem *problem);
-void dynamic(cargo_problem cargo);
+// void dynamic(cargo_problem cargo);
 void print_matrix(int** matrix);
+void greedy_knapsack(cargo_problem *problem);
 
 #endif

@@ -24,7 +24,7 @@ int main() {
         sprintf(filename, SET1DIR "problem_%d.csv", i);
         
         // Initialize cargo_problem struct
-        struct cargo_problem problem;
+        cargo_problem problem;
         problem.container_count = container_count;
         problem.capacity = capacity;
         
@@ -59,7 +59,7 @@ int main() {
         sprintf(filename, SET2DIR "problem_%d.csv", i);
         
         // Initialize cargo_problem struct
-        struct cargo_problem problem;
+        cargo_problem problem;
         problem.container_count = container_count;
         problem.capacity = capacity;
         
@@ -89,13 +89,205 @@ int main() {
     return 0;
 }
 
+==> src/DEBUG.c <==
+#include "knapsack.h"
+#include <stdio.h>
+
+int main(){
+
+    // Example cargo
+    cargo_problem cargo = {
+        {
+            {1, 2},
+            {2, 3},
+            {3, 4}
+        }, 
+        3, 
+        7, 
+        {{0}}, 
+        0
+    };
+    
+    // Debug dynamic knapsack
+    dynamic(cargo);
+
+    
+    int rows = 2;
+    int cols = 5;
+    int** matrix = malloc(rows * sizeof(int*));
+    for (int i = 0; i < rows; i++) {
+        matrix[i] = calloc(cols, sizeof(int));
+    }
+
+    print_matrix(matrix);
+
+    return 0;
+}
+
+==> src/dynamic.c <==
+// #include "knapsack.h"
+// #include <stdlib.h>
+
+// // Functions
+// void dynamic(cargo_problem cargo){
+//     // Variables
+//     int cap = cargo.capacity;
+//     int cc = cargo.container_count;
+
+//     // Create dynamic 2D matrix
+//     int** matrix;
+//     matrix = malloc((cc + 1)*sizeof(*matrix));
+
+//     for (int i = 0; i < cc + 1; i++)
+//     {
+//         matrix[i] = malloc((cap + 1)*sizeof(matrix[i]));
+//     }
+
+//     // Populate matrix
+//     for (int i = 0; i < cc + 1; i++)
+//     {
+//         for (int j = 0; j < cap + 1; j++)
+//         {
+//             matrix[i][j] = 0;
+//         }
+        
+//     }
+
+// }
+
+#include "knapsack.h"
+#include <stdlib.h>
+
+// Functions
+void dynamic(cargo_problem cargo){
+    // Variables
+    int cap = cargo.capacity;
+    int cc = cargo.container_count;
+
+    // Create dynamic 2D matrix
+    int** matrix;
+    matrix = calloc(cc + 1, sizeof(*matrix));
+
+    for (int i = 0; i < cc + 1; i++)
+    {
+        matrix[i] = calloc(cap + 1, sizeof(matrix[i]));
+    }
+
+    // Populate matrix
+    for (int i = 0; i < cc + 1; i++)
+    {
+        for (int j = 0; j < cap + 1; j++)
+        {
+            matrix[i][j] = 0;
+        }
+        
+    }
+
+
+    
+}
+
+void print_matrix(int** matrix){
+
+    int rows = sizeof(matrix);
+    int cols;
+    for (int i = 0; i < rows; i++)
+        cols += sizeof(matrix[i]);
+
+    for (int i = 0; i < rows + 1; i++)
+    {
+        for (int j = 0; j < cols + 1; j++)
+        {
+            printf("%i ", matrix[i][j]);
+        }
+    printf("\n");
+    }
+}
+==> src/greedy.c <==
+#include <stdlib.h>
+#include <stdio.h>
+#include "knapsack.h"
+
+static int compare_items(const void *a, const void *b) {
+    const int *itemA = *(const int **)a;
+    const int *itemB = *(const int **)b;
+    
+    double densityA = (double)itemA[0] / itemA[1];
+    double densityB = (double)itemB[0] / itemB[1];
+    
+    if (densityA > densityB) return -1;
+    if (densityA < densityB) return 1;
+    return 0;
+}
+
+void greedy_knapsack(cargo_problem *problem) {
+    int n = problem->container_count;
+    int capacity = problem->capacity;
+    
+    // Reset solution
+    if (problem->out_cargo != NULL) {
+        for (int i = 0; i < problem->out_count; i++) {
+            free(problem->out_cargo[i]);
+        }
+        free(problem->out_cargo);
+    }
+    problem->out_cargo = NULL;
+    problem->out_count = 0;
+    problem->value = 0;
+    
+    // Create a copy of the input array for sorting
+    int **items = malloc(n * sizeof(int *));
+    for (int i = 0; i < n; i++) {
+        items[i] = malloc(2 * sizeof(int));
+        items[i][0] = problem->in_cargo[i][0];  // value
+        items[i][1] = problem->in_cargo[i][1];  // weight
+    }
+    
+    // Sort items by value density (value/weight) descending
+    qsort(items, n, sizeof(int *), compare_items);
+    
+    // Greedy selection
+    int current_weight = 0;
+    int total_value = 0;
+    int selected_count = 0;
+    int **selected = malloc(n * sizeof(int *));
+    
+    for (int i = 0; i < n; i++) {
+        if (current_weight + items[i][1] <= capacity) {
+            // Add item to selection
+            selected[selected_count] = malloc(2 * sizeof(int));
+            selected[selected_count][0] = items[i][0];
+            selected[selected_count][1] = items[i][1];
+            
+            current_weight += items[i][1];
+            total_value += items[i][0];
+            selected_count++;
+        }
+    }
+    
+    // Save results
+    problem->out_cargo = malloc(selected_count * sizeof(int *));
+    for (int i = 0; i < selected_count; i++) {
+        problem->out_cargo[i] = selected[i];
+    }
+    problem->out_count = selected_count;
+    problem->value = total_value;
+    
+    // Cleanup
+    for (int i = 0; i < n; i++) {
+        free(items[i]);
+    }
+    free(items);
+    free(selected);
+}
+
 ==> src/io_util.c <==
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "knapsack.h"
 
-void read_file(const char *filename, struct cargo_problem *problem) {
+void read_file(const char *filename, cargo_problem *problem) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Error opening file");
@@ -146,7 +338,7 @@ void read_file(const char *filename, struct cargo_problem *problem) {
     fclose(file);
 }
 
-void write_file(const char *filename, struct cargo_problem *problem) {
+void write_file(const char *filename, cargo_problem *problem) {
     FILE *file = fopen(filename, "w");
     if (!file) {
         perror("Error opening file");
@@ -162,14 +354,14 @@ void write_file(const char *filename, struct cargo_problem *problem) {
     fclose(file);
 }
 
-void print_input(struct cargo_problem *problem) {
+void print_input(cargo_problem *problem) {
     printf("Input items: %d, Capacity: %d\n", problem->container_count, problem->capacity);
     for (int i = 0; i < problem->container_count; i++) {
         printf("Item %d: value=%d, weight=%d\n", i+1, problem->in_cargo[i][0], problem->in_cargo[i][1]);
     }
 }
 
-void print_output(struct cargo_problem *problem) {
+void print_output(cargo_problem *problem) {
     printf("Total value: %d, Capacity used: ", problem->value);
     
     // Calculate total weight used
@@ -187,19 +379,27 @@ void print_output(struct cargo_problem *problem) {
 }
 
 ==> src/knapsack.h <==
-struct cargo_problem {
-  int** in_cargo; // [[value, weight], ...]
-  int container_count;
-  int capacity;
-  int** out_cargo; // [[value, weight], ...]
-  int value;
-  int out_count;
-};
+#ifndef KNAPSACK_H
+#define KNAPSACK_H
 
-void read_file(const char* filename, struct cargo_problem *problem);
-void write_file(const char* filename, struct cargo_problem *problem);
-void print_input(struct cargo_problem *problem);
-void print_output(struct cargo_problem *problem);
+typedef struct{
+	int** in_cargo; // [[value, weight], ...]
+	int container_count;
+	int capacity;
+	int** out_cargo; // [[value, weight], ...]
+	int value;
+	int out_count;
+}cargo_problem;
+
+void read_file(const char* filename, cargo_problem *problem);
+void write_file(const char* filename, cargo_problem *problem);
+void print_input(cargo_problem *problem);
+void print_output(cargo_problem *problem);
+void dynamic(cargo_problem cargo);
+void print_matrix(int** matrix);
+void greedy_knapsack(cargo_problem *problem);
+
+#endif
 
 ==> src/main.c <==
 #include <stdio.h>
@@ -212,21 +412,29 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    struct cargo_problem problem;
+    cargo_problem problem;
     read_file(argv[1], &problem);
 
     print_input(&problem);
-
-
+    greedy_knapsack(&problem);
+    print_output(&problem);
+  
     write_file(argv[2], &problem);
 
-    for (int i = 0; i < problem.container_count; i++) {
-        free(problem.out_cargo[i]);
+    // Free output cargo memory
+    if (problem.out_cargo != NULL) {
+        // CORRECTED: use out_count instead of container_count
+        for (int i = 0; i < problem.out_count; i++) {
+            free(problem.out_cargo[i]);
+        }
+        free(problem.out_cargo);
     }
-    
-    free(problem.out_cargo);
-    free(problem.in_cargo);
 
+    // Free input cargo memory
+    for (int i = 0; i < problem.container_count; i++) {
+        free(problem.in_cargo[i]);
+    }
+    free(problem.in_cargo);
 
     return 0;
 }
