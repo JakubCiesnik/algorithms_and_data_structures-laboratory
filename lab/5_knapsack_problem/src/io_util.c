@@ -3,7 +3,7 @@
 #include <string.h>
 #include "knapsack.h"
 
-void read_file(const char *filename, struct cargo_problem *problem) {
+void read_file(const char *filename, cargo_problem *problem) {
     FILE *file = fopen(filename, "r");
     if (!file) {
         perror("Error opening file");
@@ -54,7 +54,7 @@ void read_file(const char *filename, struct cargo_problem *problem) {
     fclose(file);
 }
 
-void write_file(const char *filename, struct cargo_problem *problem) {
+void write_file(const char *filename, cargo_problem *problem) {
     FILE *file = fopen(filename, "w");
     if (!file) {
         perror("Error opening file");
@@ -70,14 +70,14 @@ void write_file(const char *filename, struct cargo_problem *problem) {
     fclose(file);
 }
 
-void print_input(struct cargo_problem *problem) {
+void print_input(cargo_problem *problem) {
     printf("Input items: %d, Capacity: %d\n", problem->container_count, problem->capacity);
     for (int i = 0; i < problem->container_count; i++) {
         printf("Item %d: value=%d, weight=%d\n", i+1, problem->in_cargo[i][0], problem->in_cargo[i][1]);
     }
 }
 
-void print_output(struct cargo_problem *problem) {
+void print_output(cargo_problem *problem) {
     printf("Total value: %d, Capacity used: ", problem->value);
     
     // Calculate total weight used

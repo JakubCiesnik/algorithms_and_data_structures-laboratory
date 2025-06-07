@@ -8,7 +8,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    struct cargo_problem problem;
+    cargo_problem problem;
     read_file(argv[1], &problem);
 
     print_input(&problem);

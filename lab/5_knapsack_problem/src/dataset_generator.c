@@ -23,7 +23,7 @@ int main() {
         sprintf(filename, SET1DIR "problem_%d.csv", i);
         
         // Initialize cargo_problem struct
-        struct cargo_problem problem;
+        cargo_problem problem;
         problem.container_count = container_count;
         problem.capacity = capacity;
         
@@ -58,7 +58,7 @@ int main() {
         sprintf(filename, SET2DIR "problem_%d.csv", i);
         
         // Initialize cargo_problem struct
-        struct cargo_problem problem;
+        cargo_problem problem;
         problem.container_count = container_count;
         problem.capacity = capacity;
         
