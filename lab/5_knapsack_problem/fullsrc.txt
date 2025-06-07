@@ -1,0 +1,232 @@
+==> src/dataset_generator.c <==
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <sys/stat.h>
+#include "knapsack.h"  // Include the header for cargo_problem and write_file
+
+#define SET1DIR "dataset/var_container_count/"
+#define SET2DIR "dataset/var_capacity/"
+#define SEED 1
+
+int main() {
+    srand(SEED);
+
+    // Create directories if they don't exist
+    mkdir(SET1DIR, 0777);
+    mkdir(SET2DIR, 0777);
+
+    // Set 1: Capacity constant (100), container count iterated (10 to 150 in steps of 10)
+    for (int i = 0; i < 15; i++) {
+        int container_count = 10 + i * 10;
+        int capacity = 100;
+        char filename[100];
+        sprintf(filename, SET1DIR "problem_%d.csv", i);
+        
+        // Initialize cargo_problem struct
+        struct cargo_problem problem;
+        problem.container_count = container_count;
+        problem.capacity = capacity;
+        
+        // Allocate memory for input cargo
+        problem.in_cargo = malloc(container_count * sizeof(int *));
+        for (int j = 0; j < container_count; j++) {
+            problem.in_cargo[j] = malloc(2 * sizeof(int));
+            problem.in_cargo[j][0] = rand() % 31 + 1;  // value (1-31)
+            problem.in_cargo[j][1] = rand() % 31 + 1;  // weight (1-31)
+        }
+        
+        // Initialize unused solution fields
+        problem.out_cargo = NULL;
+        problem.out_count = 0;
+        problem.value = 0;
+        
+        // Use write_file function to save problem
+        write_file(filename, &problem);
+        
+        // Free allocated memory
+        for (int j = 0; j < container_count; j++) {
+            free(problem.in_cargo[j]);
+        }
+        free(problem.in_cargo);
+    }
+
+    // Set 2: Container count constant (100), capacity iterated (10 to 150 in steps of 10)
+    for (int i = 0; i < 15; i++) {
+        int container_count = 100;
+        int capacity = 10 + i * 10;
+        char filename[100];
+        sprintf(filename, SET2DIR "problem_%d.csv", i);
+        
+        // Initialize cargo_problem struct
+        struct cargo_problem problem;
+        problem.container_count = container_count;
+        problem.capacity = capacity;
+        
+        // Allocate memory for input cargo
+        problem.in_cargo = malloc(container_count * sizeof(int *));
+        for (int j = 0; j < container_count; j++) {
+            problem.in_cargo[j] = malloc(2 * sizeof(int));
+            problem.in_cargo[j][0] = rand() % 31 + 1;  // value (1-31)
+            problem.in_cargo[j][1] = rand() % 31 + 1;  // weight (1-31)
+        }
+        
+        // Initialize unused solution fields
+        problem.out_cargo = NULL;
+        problem.out_count = 0;
+        problem.value = 0;
+        
+        // Use write_file function to save problem
+        write_file(filename, &problem);
+        
+        // Free allocated memory
+        for (int j = 0; j < container_count; j++) {
+            free(problem.in_cargo[j]);
+        }
+        free(problem.in_cargo);
+    }
+
+    return 0;
+}
+
+==> src/io_util.c <==
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "knapsack.h"
+
+void read_file(const char *filename, struct cargo_problem *problem) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    if (fscanf(file, "%d,%d", &problem->container_count, &problem->capacity) != 2) {
+        fprintf(stderr, "Invalid first line format.\n");
+        fclose(file);
+        exit(EXIT_FAILURE);
+    }
+
+    problem->in_cargo = malloc(problem->container_count * sizeof(int *));
+    if (!problem->in_cargo) {
+        perror("Memory allocation failed");
+        fclose(file);
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < problem->container_count; i++) {
+        problem->in_cargo[i] = malloc(2 * sizeof(int));
+        if (!problem->in_cargo[i]) {
+            perror("Memory allocation failed");
+            for (int j = 0; j < i; j++) {
+                free(problem->in_cargo[j]);
+            }
+            free(problem->in_cargo);
+            fclose(file);
+            exit(EXIT_FAILURE);
+        }
+
+        if (fscanf(file, "%d,%d", &problem->in_cargo[i][0], &problem->in_cargo[i][1]) != 2) {
+            fprintf(stderr, "Invalid data at line %d.\n", i + 2);
+            for (int j = 0; j <= i; j++) {
+                free(problem->in_cargo[j]);
+            }
+            free(problem->in_cargo);
+            fclose(file);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Initialize solution fields
+    problem->out_cargo = NULL;
+    problem->out_count = 0;
+    problem->value = 0;
+
+    fclose(file);
+}
+
+void write_file(const char *filename, struct cargo_problem *problem) {
+    FILE *file = fopen(filename, "w");
+    if (!file) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    fprintf(file, "%d,%d\n", problem->container_count, problem->capacity);
+
+    for (int i = 0; i < problem->container_count; i++) {
+        fprintf(file, "%d,%d\n", problem->in_cargo[i][0], problem->in_cargo[i][1]);
+    }
+
+    fclose(file);
+}
+
+void print_input(struct cargo_problem *problem) {
+    printf("Input items: %d, Capacity: %d\n", problem->container_count, problem->capacity);
+    for (int i = 0; i < problem->container_count; i++) {
+        printf("Item %d: value=%d, weight=%d\n", i+1, problem->in_cargo[i][0], problem->in_cargo[i][1]);
+    }
+}
+
+void print_output(struct cargo_problem *problem) {
+    printf("Total value: %d, Capacity used: ", problem->value);
+    
+    // Calculate total weight used
+    int total_weight = 0;
+    for (int i = 0; i < problem->out_count; i++) {
+        total_weight += problem->out_cargo[i][1];
+    }
+    printf("%d/%d\n", total_weight, problem->capacity);
+
+    printf("Selected items: %d\n", problem->out_count);
+    for (int i = 0; i < problem->out_count; i++) {
+        printf("Item %d: value=%d, weight=%d\n", i+1, 
+               problem->out_cargo[i][0], problem->out_cargo[i][1]);
+    }
+}
+
+==> src/knapsack.h <==
+struct cargo_problem {
+  int** in_cargo; // [[value, weight], ...]
+  int container_count;
+  int capacity;
+  int** out_cargo; // [[value, weight], ...]
+  int value;
+  int out_count;
+};
+
+void read_file(const char* filename, struct cargo_problem *problem);
+void write_file(const char* filename, struct cargo_problem *problem);
+void print_input(struct cargo_problem *problem);
+void print_output(struct cargo_problem *problem);
+
+==> src/main.c <==
+#include <stdio.h>
+#include <stdlib.h>
+#include "knapsack.h"
+
+int main(int argc, char *argv[]) {
+    if (argc != 3) {
+        fprintf(stderr, "Usage: %s <input_file> <output_file>\n", argv[0]);
+        return 1;
+    }
+
+    struct cargo_problem problem;
+    read_file(argv[1], &problem);
+
+    print_input(&problem);
+
+
+    write_file(argv[2], &problem);
+
+    for (int i = 0; i < problem.container_count; i++) {
+        free(problem.out_cargo[i]);
+    }
+    
+    free(problem.out_cargo);
+    free(problem.in_cargo);
+
+
+    return 0;
+}
