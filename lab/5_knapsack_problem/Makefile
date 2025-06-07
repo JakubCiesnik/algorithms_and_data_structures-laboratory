@@ -26,6 +26,9 @@ all: $(EXECS) | $(TARGET_DIR)
 $(TARGET_DIR)/main: $(BUILD_DIR)/main.o $(BUILD_DIR)/io_util.o | $(TARGET_DIR)
 	$(CC) $(LDFLAGS) $^ -o $@
 
+$(TARGET_DIR)/dataset_generator: $(BUILD_DIR)/dataset_generator.o $(BUILD_DIR)/io_util.o | $(TARGET_DIR)
+	$(CC) $(LDFLAGS) $^ -o $@
+
 # General rule for other executables
 $(TARGET_DIR)/%: $(BUILD_DIR)/%.o | $(TARGET_DIR)
 	$(CC) $(LDFLAGS) $^ -o $@
