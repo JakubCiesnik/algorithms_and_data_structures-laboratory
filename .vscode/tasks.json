@@ -25,6 +25,66 @@
                 "isDefault": true
             },
             "detail": "Builds current C file with all C files in directory automatically."
+        },
+        {
+            "type": "cppbuild",
+            "label": "build task 5 verify in target",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-Wall",
+                "-Wextra",
+                "-Iinclude",
+                "main.c",
+                "dynamic.c",
+                "greedy.c",
+                "io_util.c",
+                "-o",
+                "${workspaceFolder}/lab/5_knapsack_problem/target/main",
+                "-lm"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/lab/5_knapsack_problem/src"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Builds task 5 verify executable for debugging purposes."
+        },
+        {
+            "type": "cppbuild",
+            "label": "build task 5 benchmark in target",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                "-Wall",
+                "-Wextra",
+                "-Iinclude",
+                "benchmark.c",
+                "dynamic.c",
+                "greedy.c",
+                "io_util.c",
+                "-o",
+                "${workspaceFolder}/lab/5_knapsack_problem/target/benchmark",
+                "-lm"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}/lab/5_knapsack_problem/src"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+            "detail": "Builds task 5 benchmark executable for debugging purposes."
         }
     ]
 }

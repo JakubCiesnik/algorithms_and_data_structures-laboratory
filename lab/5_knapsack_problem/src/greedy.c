@@ -61,9 +61,11 @@ void greedy_knapsack(cargo_problem *problem) {
     
     // Save results
     problem->out_cargo = malloc(selected_count * sizeof(int *));
-    for (int i = 0; i < selected_count; i++) {
-        problem->out_cargo[i] = selected[i];
+    for (int i = 0; i < selected_count; i++){
+        problem->out_cargo[i][0] = selected[i][0];
+        problem->out_cargo[i][1] = selected[i][1];
     }
+    
     problem->out_count = selected_count;
     problem->value = total_value;
     

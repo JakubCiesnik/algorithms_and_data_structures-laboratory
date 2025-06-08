@@ -30,7 +30,7 @@ int main() {
         // Allocate memory for input cargo
         problem.in_cargo = malloc(container_count * sizeof(int *));
         for (int j = 0; j < container_count; j++) {
-            problem.in_cargo[j] = malloc(2 * sizeof(int));
+            // problem.in_cargo[j] = malloc(2 * sizeof(int));
             problem.in_cargo[j][0] = rand() % 31 + 1;  // value (1-31)
             problem.in_cargo[j][1] = rand() % 31 + 1;  // weight (1-31)
         }
@@ -65,7 +65,7 @@ int main() {
         // Allocate memory for input cargo
         problem.in_cargo = malloc(container_count * sizeof(int *));
         for (int j = 0; j < container_count; j++) {
-            problem.in_cargo[j] = malloc(2 * sizeof(int));
+            // problem.in_cargo[j] = malloc(2 * sizeof(int));
             problem.in_cargo[j][0] = rand() % 31 + 1;  // value (1-31)
             problem.in_cargo[j][1] = rand() % 31 + 1;  // weight (1-31)
         }

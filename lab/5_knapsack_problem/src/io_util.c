@@ -24,16 +24,16 @@ void read_file(const char *filename, cargo_problem *problem) {
     }
 
     for (int i = 0; i < problem->container_count; i++) {
-        problem->in_cargo[i] = malloc(2 * sizeof(int));
-        if (!problem->in_cargo[i]) {
-            perror("Memory allocation failed");
-            for (int j = 0; j < i; j++) {
-                free(problem->in_cargo[j]);
-            }
-            free(problem->in_cargo);
-            fclose(file);
-            exit(EXIT_FAILURE);
-        }
+        // problem->in_cargo[i] = malloc(2 * sizeof(int));
+        // if (!problem->in_cargo[i]) {
+        //     perror("Memory allocation failed");
+        //     for (int j = 0; j < i; j++) {
+        //         free(problem->in_cargo[j]);
+        //     }
+        //     free(problem->in_cargo);
+        //     fclose(file);
+        //     exit(EXIT_FAILURE);
+        // }
 
         if (fscanf(file, "%d,%d", &problem->in_cargo[i][0], &problem->in_cargo[i][1]) != 2) {
             fprintf(stderr, "Invalid data at line %d.\n", i + 2);
@@ -89,7 +89,66 @@ void print_output(cargo_problem *problem) {
 
     printf("Selected items: %d\n", problem->out_count);
     for (int i = 0; i < problem->out_count; i++) {
-        printf("Item %d: value=%d, weight=%d\n", i+1, 
+        printf("Item %d: value= %d, weight= %d\n", i+1, 
                problem->out_cargo[i][0], problem->out_cargo[i][1]);
     }
+}
+
+// Specific verification input file format
+void read_verification_file(const char *filename, cargo_problem *problem) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Container count
+    if (fscanf(file, "%d", &problem->container_count) != 1) {
+        fprintf(stderr, "Invalid container count format.\n");
+        fclose(file);
+        exit(EXIT_FAILURE);
+    }
+
+    // Items
+    problem->in_cargo = malloc(problem->container_count * sizeof(int[2]));
+    if (!problem->in_cargo) {
+        perror("Memory allocation failed");
+        fclose(file);
+        exit(EXIT_FAILURE);
+    }
+
+    // Reading weights
+    for (int i = 0; i < problem->container_count; i++) {
+        if (fscanf(file, "%d", &problem->in_cargo[i][1]) != 1) {
+            fprintf(stderr, "Invalid weight data at position %d.\n", i + 1);
+            free(problem->in_cargo);
+            fclose(file);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // Reading values
+    for (int i = 0; i < problem->container_count; i++) {
+        if (fscanf(file, "%d", &problem->in_cargo[i][0]) != 1) {
+            fprintf(stderr, "Invalid value data at position %d.\n", i + 1);
+            free(problem->in_cargo);
+            fclose(file);
+            exit(EXIT_FAILURE);
+        }
+    }
+    
+    // Capacity
+    if (fscanf(file, "%d", &problem->capacity) != 1) {
+        fprintf(stderr, "Invalid capacity format.\n");
+        free(problem->in_cargo);
+        fclose(file);
+        exit(EXIT_FAILURE);
+    }
+    
+    // Initialize solution fields
+    problem->out_cargo = NULL;
+    problem->out_count = 0;
+    problem->value = 0;
+
+    fclose(file);
 }

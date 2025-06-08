@@ -6,55 +6,29 @@
 #include <time.h>
 #include "knapsack.h"
 
-// Function to implement dynamic programming knapsack
-void dynamic(cargo_problem *problem) {
-    int n = problem->container_count;
-    int W = problem->capacity;
+#define MAX_FILES 100
 
-    // Create DP table
-    int **dp = malloc((n+1) * sizeof(int *));
-    for (int i = 0; i <= n; i++) {
-        dp[i] = malloc((W+1) * sizeof(int));
-    }
-
-    // Initialize DP table
-    for (int i = 0; i <= n; i++) {
-        for (int w = 0; w <= W; w++) {
-            if (i == 0 || w == 0) {
-                dp[i][w] = 0;
-            } else if (problem->in_cargo[i-1][1] <= w) {
-                int include = problem->in_cargo[i-1][0] + dp[i-1][w - problem->in_cargo[i-1][1]];
-                int exclude = dp[i-1][w];
-                dp[i][w] = (include > exclude) ? include : exclude;
-            } else {
-                dp[i][w] = dp[i-1][w];
-            }
-        }
-    }
-
-    // Store result
-    problem->value = dp[n][W];
-
-    // Cleanup
-    for (int i = 0; i <= n; i++) {
-        free(dp[i]);
-    }
-    free(dp);
+// Comparison function for qsort - sorts by problem number
+int compare_strings(const void *a, const void *b) {
+    const char *str_a = (const char*)a;
+    const char *str_b = (const char*)b;
+    
+    // Extract numbers from "problem_X.csv" format
+    int num_a = -1, num_b = -1;
+    sscanf(str_a, "problem_%d.csv", &num_a);
+    sscanf(str_b, "problem_%d.csv", &num_b);
+    
+    // Compare by number
+    return num_a - num_b;
 }
 
 // Function to free cargo_problem memory
 void free_cargo_problem(cargo_problem *problem) {
     if (problem->in_cargo) {
-        for (int i = 0; i < problem->container_count; i++) {
-            free(problem->in_cargo[i]);
-        }
         free(problem->in_cargo);
     }
     
     if (problem->out_cargo) {
-        for (int i = 0; i < problem->out_count; i++) {
-            free(problem->out_cargo[i]);
-        }
         free(problem->out_cargo);
     }
 }
@@ -65,7 +39,6 @@ void benchmark_file(const char *filename, FILE *output) {
     clock_t start, end;
     double greedy_time, dynamic_time;
     int greedy_value, dynamic_value;
-    double accuracy;
 
     // Read problem
     read_file(filename, &problem);
@@ -79,27 +52,25 @@ void benchmark_file(const char *filename, FILE *output) {
     
     // Free greedy solution before running dynamic
     if (problem.out_cargo) {
-        for (int i = 0; i < problem.out_count; i++) {
-            free(problem.out_cargo[i]);
-        }
         free(problem.out_cargo);
         problem.out_cargo = NULL;
     }
 
-    // Run dynamic algorithm
+    // Run dynamic algorithm (jacob version)
     start = clock();
     dynamic(&problem);
     end = clock();
     dynamic_time = ((double)(end - start)) * 1000 / CLOCKS_PER_SEC;
     dynamic_value = problem.value;
 
-    // Calculate accuracy
-    accuracy = (dynamic_value > 0) ? 
-        ((double)greedy_value / dynamic_value) * 100 : 0;
+    // Calculate relative error: (D_dyn - D_greedy) / D_dyn
+    double relative_error = (dynamic_value > 0) ? 
+        ((double)(dynamic_value - greedy_value) / dynamic_value) * 100 : 0;
 
     // Write results
-    fprintf(output, "%s,%d,%d,%.2f,%.4f,%.4f\n", 
-            filename, greedy_value, dynamic_value, accuracy, 
+    fprintf(output, "%s,%d,%d,%d,%d,%.2f,%.4f,%.4f\n", 
+            filename, problem.container_count, problem.capacity, 
+            greedy_value, dynamic_value, relative_error, 
             greedy_time, dynamic_time);
 
     // Free resources
@@ -111,20 +82,34 @@ void benchmark_dir(const char *dirname, FILE *output) {
     DIR *dir;
     struct dirent *ent;
     char path[1024];
+    char filenames[MAX_FILES][256];
+    int file_count = 0;
 
     if ((dir = opendir(dirname)) != NULL) {
-        while ((ent = readdir(dir)) != NULL) {
-            if (ent->d_type == DT_REG) {  // Regular file
-                snprintf(path, sizeof(path), "%s/%s", dirname, ent->d_name);
-                benchmark_file(path, output);
+        // Collect all CSV filenames first
+        while ((ent = readdir(dir)) != NULL && file_count < MAX_FILES) {
+            if (strstr(ent->d_name, ".csv") != NULL) {
+                strcpy(filenames[file_count], ent->d_name);
+                file_count++;
             }
         }
         closedir(dir);
+        
+        // Sort filenames to ensure consistent order
+        qsort(filenames, file_count, sizeof(filenames[0]), compare_strings);
+        
+        // Process files in sorted order
+        for (int i = 0; i < file_count; i++) {
+            snprintf(path, sizeof(path), "%s/%s", dirname, filenames[i]);
+            benchmark_file(path, output);
+        }
     } else {
         perror("Could not open directory");
     }
 }
 
+
+// Main runtime
 int main() {
     // Create output file
     FILE *output = fopen("benchmark_results.csv", "w");
@@ -134,7 +119,7 @@ int main() {
     }
 
     // Write CSV header
-    fprintf(output, "Problem,Greedy Value,Dynamic Value,Accuracy(%%),Greedy Time(ms),Dynamic Time(ms)\n");
+    fprintf(output, "Problem,Container Count,Capacity,Greedy Value,Dynamic Value,Relative Error(%%),Greedy Time(ms),Dynamic Time(ms)\n");
 
     // Benchmark both directories
     benchmark_dir("dataset/var_capacity", output);

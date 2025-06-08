@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         {
             "name": "Debug Current C File (Smart)",
             "type": "cppdbg",
@@ -20,6 +21,51 @@
                 }
             ],
             "preLaunchTask": "build C in target",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Debug Task 5 verify",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/lab/5_knapsack_problem/target/verify",
+            // EDIT THE ARGS HERE
+            "args": ["plecak.txt"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/lab/5_knapsack_problem",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build task 5 verify in target",
+            "miDebuggerPath": "/usr/bin/gdb",
+            "internalConsoleOptions": "openOnSessionStart"
+        },
+        {
+            "name": "Debug Task 5 benchmark",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/lab/5_knapsack_problem/target/benchmark",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/lab/5_knapsack_problem",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "build task 5 benchmark in target",
             "miDebuggerPath": "/usr/bin/gdb",
             "internalConsoleOptions": "openOnSessionStart"
         }

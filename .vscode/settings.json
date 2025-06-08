@@ -2,7 +2,9 @@
     "files.associations": {
         "algorithm": "c",
         "stdlib.h": "c",
-        "def_graph.h": "c"
+        "def_graph.h": "c",
+        "dirent.h": "c",
+        "knapsack.h": "c"
     },
     "[makefile]": {
         "editor.insertSpaces": false,
